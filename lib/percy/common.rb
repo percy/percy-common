@@ -1,0 +1,1 @@
+require 'percy/common/version'
