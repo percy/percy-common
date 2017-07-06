@@ -1,7 +1,7 @@
 require 'percy/keyword_struct'
 
 RSpec.describe Percy::KeywordStruct do
-  it 'has a version number' do
+  it 'works' do
     class Foo < Percy::KeywordStruct.new(:bar, :baz, :qux)
     end
 
