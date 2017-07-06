@@ -20,7 +20,7 @@ module Percy
     end
 
     def stop_timing(stat, options = {})
-      raise 'no timing started' if !@_timing_start  # Programmer mistake, so raise an error.
+      raise 'no timing started' unless @_timing_start # Programmer mistake, so raise an error.
       time_since(stat, @_timing_start, options)
       @_timing_start = nil
       true
