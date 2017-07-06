@@ -32,6 +32,20 @@ Percy.logger.error { 'error message' }
 
 Prefer the block form usage `Percy.logger.debug { 'message' }` over `Percy.logger.debug('message')` because it is slightly more efficient when the log will be excluded by the current logging level. For example, if the log level is currently `info`, then a `debug` log in block form will never evaluate or allocate the message string itself.
 
+## Percy::ProcessHelpers
+
+### `gracefully_kill(pid[, grace_period_seconds: 10])`
+
+Returns `true` if the process was successfully killed, or `false` if the process did not exist or its exit status was already collected.
+
+```ruby
+require 'percy/process_helpers'
+
+Percy::ProcessHelpers.gracefully_kill(pid)
+```
+
+This will send `SIGTERM` to the process, wait up to 10 seconds, then send `SIGKILL` if it has not already shut down.
+
 ## Percy::Stats
 
 Client for recording Datadog metrics and automatically setting up Percy-specific environment tags.
