@@ -78,6 +78,49 @@ Percy::ProcessHelpers.gracefully_kill(pid)
 
 This will send `SIGTERM` to the process, wait up to 10 seconds, then send `SIGKILL` if it has not already shut down.
 
+### Percy::NetworkHelpers
+
+#### `random_open_port`
+
+Returns a random open port. This is guaranteed by the OS to be currently an unbound open port, but users must still handle race conditions where the port is bound by the time it is actually used.
+
+```ruby
+require 'percy/network_helpers'
+
+Percy::NetworkHelpers.random_open_port
+```
+
+#### `verify_healthcheck(url:[, expected_body: 'ok', retry_wait_seconds: 0.5])`
+
+Verify that a URL returns a specific body. Raises `Percy::NetworkHelpers::ServerDown` if the server is down or does not respond with the expected body.
+
+```ruby
+require 'percy/network_helpers'
+
+Percy::NetworkHelpers.verify_healthcheck('http://localhost/healthz')
+```
+
+#### `verify_http_server_up(hostname[, port: nil, path: nil, retry_wait_seconds: 0.25])`
+
+Verifies that a simple HTTP GET / request works against a hostname. Raises `Percy::NetworkHelpers::ServerDown` if the server is down or if the request times out.
+
+```ruby
+require 'percy/network_helpers'
+
+Percy::NetworkHelpers.verify_http_server_up('example.com')
+Percy::NetworkHelpers.verify_http_server_up('localhost', port: 8080)
+```
+
+#### `serve_static_directory(dir[, hostname: 'localhost', port: nil])`
+
+Starts a simple local WEBrick server to serve a directory of static assets. This is a testing helper and should not be used in production.
+
+```ruby
+require 'percy/network_helpers'
+
+Percy::NetworkHelpers.serve_static_directory(File.expand_path('../test_data/', __FILE__))
+```
+
 ### Percy::Stats
 
 Client for recording Datadog metrics and automatically setting up Percy-specific environment tags.
