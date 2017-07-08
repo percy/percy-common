@@ -18,6 +18,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency 'dogstatsd-ruby', '~> 1.6'
   spec.add_dependency 'syslog-logger', '~> 1.6'
+  spec.add_dependency 'excon', '~> 0.57'
 
   spec.add_development_dependency 'bundler', '~> 1.15'
   spec.add_development_dependency 'rake', '~> 10.0'
