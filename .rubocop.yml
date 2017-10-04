@@ -5,3 +5,6 @@ inherit_gem:
 RSpec/DescribeClass:
   Exclude:
     - spec/percy/logger_spec.rb
+
+Style::ColonMethodCall:
+  Enabled: false

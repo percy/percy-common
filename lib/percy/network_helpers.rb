@@ -1,16 +1,32 @@
 require 'socket'
 require 'excon'
+require 'timeout'
 
 module Percy
   class NetworkHelpers
+    MIN_PORT = 1_024 # 0-1023 are system reserved
+    MAX_PORT = 65_535 # (2^16) -1
+
     class ServerDown < RuntimeError; end
 
     def self.random_open_port
-      # Using a port of "0" relies on the system to pick an open port.
-      server = TCPServer.new('127.0.0.1', 0)
-      port = server.addr[1]
-      server.close
-      port
+      loop do
+        port = rand(MIN_PORT..MAX_PORT)
+        return port if port_open? port
+      end
+    end
+
+    def port_open?(port, seconds = 1)
+      Timeout::timeout(seconds) do
+        begin
+          TCPServer.new(port).close
+          true
+        rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH
+          false
+        end
+      end
+    rescue Timeout::Error
+      false
     end
 
     def self.verify_healthcheck(url:, expected_body: 'ok', retry_wait_seconds: 0.5)
