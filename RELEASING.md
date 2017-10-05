@@ -1,5 +1,6 @@
 # Releasing
 
+1. `git pull origin master`
 1. Bump the version number in `lib/percy/common/version.rb`
 1. `git add lib/percy/common/version.rb`
 1. `git commit -m "version bump to X.X.X"`
