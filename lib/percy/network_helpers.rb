@@ -16,12 +16,12 @@ module Percy
       end
     end
 
-    def port_open?(port, seconds = 1)
+    def self.port_open?(port, seconds = 1)
       Timeout::timeout(seconds) do
         begin
           TCPServer.new(port).close
           true
-        rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH
+        rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, Errno::EADDRINUSE
           false
         end
       end

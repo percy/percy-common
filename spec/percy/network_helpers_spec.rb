@@ -21,10 +21,26 @@ RSpec.describe Percy::NetworkHelpers do
   end
 
   describe '#random_open_port' do
-    it 'returns a random open port' do
-      expect(Percy::NetworkHelpers.random_open_port).to be >= 1024
+    it 'returns a random open port in the desired range' do
+      expect(Percy::NetworkHelpers.random_open_port).to be >= described_class::MIN_PORT
+      expect(Percy::NetworkHelpers.random_open_port).to be <= described_class::MAX_PORT
     end
   end
+
+  describe '#port_open?' do
+    let(:port) { 7070 }
+
+    it 'tells you if a port is open or not' do
+      # Block the port and check it's not open
+      server = TCPServer.open port
+      expect(Percy::NetworkHelpers.port_open?(port)).to eq(false)
+
+      # Unblock the port and check it's open now
+      server.close
+      expect(Percy::NetworkHelpers.port_open?(port)).to eq(true)
+    end
+  end
+
   describe '#verify_healthcheck' do
     include_context 'has a test HTTP server'
 
