@@ -3,14 +3,29 @@ require 'excon'
 
 module Percy
   class NetworkHelpers
+    MIN_PORT = 1_024 # 0-1023 are not available without privilege
+    MAX_PORT = 65_535 # (2^16) -1
+    MAX_PORT_ATTEMPTS = 50
+
     class ServerDown < RuntimeError; end
+    class OpenPortNotFound < RuntimeError; end
 
     def self.random_open_port
-      # Using a port of "0" relies on the system to pick an open port.
-      server = TCPServer.new('127.0.0.1', 0)
-      port = server.addr[1]
-      server.close
-      port
+      MAX_PORT_ATTEMPTS.times do
+        port = rand(MIN_PORT..MAX_PORT)
+        return port if port_open? port
+      end
+
+      raise OpenPortNotFound
+    end
+
+    def self.port_open?(port)
+      begin
+        TCPServer.new(port).close
+        true
+      rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, Errno::EADDRINUSE
+        false
+      end
     end
 
     def self.verify_healthcheck(url:, expected_body: 'ok', retry_wait_seconds: 0.5)
