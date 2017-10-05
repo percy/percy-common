@@ -1,6 +1,5 @@
 require 'socket'
 require 'excon'
-require 'timeout'
 
 module Percy
   class NetworkHelpers
@@ -20,17 +19,13 @@ module Percy
       raise OpenPortNotFound
     end
 
-    def self.port_open?(port, seconds = 1)
-      Timeout::timeout(seconds) do
-        begin
-          TCPServer.new(port).close
-          true
-        rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, Errno::EADDRINUSE
-          false
-        end
+    def self.port_open?(port)
+      begin
+        TCPServer.new(port).close
+        true
+      rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, Errno::EADDRINUSE
+        false
       end
-    rescue Timeout::Error
-      false
     end
 
     def self.verify_healthcheck(url:, expected_body: 'ok', retry_wait_seconds: 0.5)

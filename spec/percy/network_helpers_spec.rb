@@ -46,13 +46,6 @@ RSpec.describe Percy::NetworkHelpers do
       server.close
       expect(Percy::NetworkHelpers.port_open?(port)).to eq(true)
     end
-
-    it 'handles timeouts' do
-      expect(Percy::NetworkHelpers.port_open?(port)).to eq(true)
-
-      allow(TCPServer).to receive(:new).and_raise(Timeout::Error)
-      expect(Percy::NetworkHelpers.port_open?(port)).to eq(false)
-    end
   end
 
   describe '#verify_healthcheck' do
