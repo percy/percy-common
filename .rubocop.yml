@@ -6,5 +6,5 @@ RSpec/DescribeClass:
   Exclude:
     - spec/percy/logger_spec.rb
 
-Style::ColonMethodCall:
+Style/ColonMethodCall:
   Enabled: false
