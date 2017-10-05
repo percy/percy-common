@@ -25,6 +25,13 @@ RSpec.describe Percy::NetworkHelpers do
       expect(Percy::NetworkHelpers.random_open_port).to be >= described_class::MIN_PORT
       expect(Percy::NetworkHelpers.random_open_port).to be <= described_class::MAX_PORT
     end
+
+    it 'raises an error when an open port is not found' do
+      allow(Percy::NetworkHelpers).to receive(:port_open?).and_return(false)
+
+      expect { Percy::NetworkHelpers.random_open_port }.to \
+        raise_error(Percy::NetworkHelpers::OpenPortNotFound)
+    end
   end
 
   describe '#port_open?' do

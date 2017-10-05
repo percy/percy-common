@@ -4,16 +4,20 @@ require 'timeout'
 
 module Percy
   class NetworkHelpers
-    MIN_PORT = 1_024 # 0-1023 are system reserved
+    MIN_PORT = 1_024 # 0-1023 are not available without privilege
     MAX_PORT = 65_535 # (2^16) -1
+    MAX_PORT_ATTEMPTS = 50
 
     class ServerDown < RuntimeError; end
+    class OpenPortNotFound < RuntimeError; end
 
     def self.random_open_port
-      loop do
+      MAX_PORT_ATTEMPTS.times do
         port = rand(MIN_PORT..MAX_PORT)
         return port if port_open? port
       end
+
+      raise OpenPortNotFound
     end
 
     def self.port_open?(port, seconds = 1)
