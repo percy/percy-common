@@ -6,7 +6,6 @@
 1. `git push --tags`
 1. `bundle exec rake build`
 1. `gem push pkg/percy-common-X.X.X.gem`
-1. Login as Percy to publish
 1. Visit [RubyGems.org](https://rubygems.org/gems/percy-common) and see the gem has been published
 1. Document the release on Github by first [creating a new release](https://github.com/percy/percy-common/releases/new)
 1. Enter "vX.X.X" as the tag version. It should auto complete to say "Existing Tag"
