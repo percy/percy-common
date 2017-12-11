@@ -5,7 +5,7 @@ require 'percy/network_helpers'
 RSpec.describe Percy::NetworkHelpers do
   let(:server_port) { Percy::NetworkHelpers.random_open_port }
 
-  shared_context 'has a test HTTP server' do
+  shared_context 'with test HTTP server' do
     let(:server_url) { "http://localhost:#{server_port}" }
     let(:server) { WEBrick::HTTPServer.new(Port: server_port) }
 
@@ -49,7 +49,7 @@ RSpec.describe Percy::NetworkHelpers do
   end
 
   describe '#verify_healthcheck' do
-    include_context 'has a test HTTP server'
+    include_context 'with test HTTP server'
 
     it 'returns true if server is up and responds to healthcheck' do
       expect(Percy::NetworkHelpers.verify_healthcheck(url: server_url + '/healthz')).to eq(true)
@@ -62,7 +62,7 @@ RSpec.describe Percy::NetworkHelpers do
   end
   describe '#verify_http_server_up' do
     context 'when server is up' do
-      include_context 'has a test HTTP server'
+      include_context 'with test HTTP server'
 
       it 'returns true if server is up and responds to healthcheck' do
         result = Percy::NetworkHelpers.verify_http_server_up('localhost', port: server_port)
