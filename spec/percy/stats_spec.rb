@@ -3,6 +3,27 @@ require 'percy/stats'
 RSpec.describe Percy::Stats do
   let(:stats) { Percy::Stats.new }
 
+  context 'without env vars' do
+    it 'sets host and port from defaults' do
+      expect(stats.host).to eq('127.0.0.1')
+      expect(stats.port).to eq(8125)
+    end
+  end
+  context 'with env vars' do
+    before(:each) do
+      ENV['DATADOG_AGENT_HOST'] = 'localhost'
+      ENV['DATADOG_AGENT_PORT'] = '1000'
+    end
+    after(:each) do
+      ENV.delete('DATADOG_AGENT_HOST')
+      ENV.delete('DATADOG_AGENT_PORT')
+    end
+
+    it 'sets host and port from env vars' do
+      expect(stats.host).to eq('localhost')
+      expect(stats.port).to eq(1000)
+    end
+  end
   it 'sets environment tag' do
     expect(stats.tags).to eq(['env:test'])
   end
