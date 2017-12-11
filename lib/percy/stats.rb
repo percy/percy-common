@@ -1,11 +1,14 @@
-require 'statsd'
+require 'datadog/statsd'
 require 'time'
 
 module Percy
-  class Stats < ::Statsd
-    def initialize(*args)
-      super
-      self.tags = ["env:#{ENV['PERCY_ENV'] || 'development'}"]
+  class Stats < ::Datadog::Statsd
+    def initialize(host = nil, port = nil, opts = {}, max_buffer_size = 50)
+      host = ENV.fetch('DATADOG_AGENT_HOST', ::Datadog::Statsd::DEFAULT_HOST)
+      port = Integer(ENV.fetch('DATADOG_AGENT_PORT', ::Datadog::Statsd::DEFAULT_PORT))
+      opts[:tags] ||= []
+      opts[:tags] << "env:#{ENV['PERCY_ENV'] || 'development'}"
+      super(host, port, opts, max_buffer_size)
     end
 
     # Equivalent to stats.time, but without wrapping in blocks and dealing with var scoping issues.
