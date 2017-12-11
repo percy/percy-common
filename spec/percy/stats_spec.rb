@@ -24,9 +24,6 @@ RSpec.describe Percy::Stats do
       expect(stats.port).to eq(1000)
     end
   end
-  it 'sets host based on DATADOG_AGENT_HOST' do
-    ENV['']
-  end
   it 'sets environment tag' do
     expect(stats.tags).to eq(['env:test'])
   end
