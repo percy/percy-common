@@ -17,7 +17,6 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_dependency 'dogstatsd-ruby', '~> 3.1'
-  spec.add_dependency 'syslog-logger', '~> 1.6'
   spec.add_dependency 'excon', '~> 0.57'
 
   spec.add_development_dependency 'bundler', '~> 1.15'
