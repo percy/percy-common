@@ -4,8 +4,6 @@ require 'pry'
 
 module Percy
   class Stats < ::Datadog::Statsd
-    SOCKET_MAX_RETRIES = 3
-
     def initialize(host = nil, port = nil, opts = {}, max_buffer_size = 50)
       host ||= ENV.fetch('DATADOG_AGENT_HOST', ::Datadog::Statsd::DEFAULT_HOST)
       port ||= Integer(ENV.fetch('DATADOG_AGENT_PORT', ::Datadog::Statsd::DEFAULT_PORT))
