@@ -9,6 +9,7 @@ RSpec.describe Percy::Stats do
       expect(stats.port).to eq(8125)
     end
   end
+
   context 'with env vars' do
     before(:each) do
       ENV['DATADOG_AGENT_HOST'] = 'localhost'
@@ -24,14 +25,17 @@ RSpec.describe Percy::Stats do
       expect(stats.port).to eq(1000)
     end
   end
+
   it 'sets environment tag' do
     expect(stats.tags).to eq(['env:test'])
   end
+
   describe 'start_timing' do
     it 'returns the current step index for the given stat' do
       expect(stats.start_timing).to eq(true)
     end
   end
+
   describe 'stop_timing' do
     it 'stops timing and records the time difference' do
       expect(stats).to receive(:time_since)
@@ -44,6 +48,7 @@ RSpec.describe Percy::Stats do
       stats.start_timing
       stats.stop_timing('foo.bar.step2', priority: :low)
     end
+
     it 'fails if no timing step is in progress' do
       expect { stats.stop_timing('foo.bar') }.to raise_error(RuntimeError)
 
