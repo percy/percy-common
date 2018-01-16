@@ -14,15 +14,44 @@ RSpec.describe Percy::Stats do
     before(:each) do
       ENV['DATADOG_AGENT_HOST'] = 'localhost'
       ENV['DATADOG_AGENT_PORT'] = '1000'
+      ENV['SOCKET_RETRY_DELAY'] = '3'
     end
     after(:each) do
       ENV.delete('DATADOG_AGENT_HOST')
       ENV.delete('DATADOG_AGENT_PORT')
+      ENV.delete('SOCKET_RETRY_DELAY')
     end
 
     it 'sets host and port from env vars' do
       expect(stats.host).to eq('localhost')
       expect(stats.port).to eq(1000)
+    end
+
+    context 'with a network failure' do
+      it 'retries the DNS query for the given host' do
+        expect_any_instance_of(
+          Datadog::Statsd,
+        ).to receive(
+          :connect_to_socket,
+        ).exactly(Percy::Stats::SOCKET_MAX_RETRIES).times.and_raise(SocketError)
+        expect_any_instance_of(
+          Datadog::Statsd,
+        ).to receive(
+          :connect_to_socket,
+        ).once.and_call_original
+        Percy::Stats.new('localhost', 1000, retry_count: 3, retry_delay: 0)
+      end
+
+      it 'gives up after the specified retries count' do
+        expect_any_instance_of(
+          Datadog::Statsd,
+        ).to receive(
+          :connect_to_socket,
+        ).exactly(Percy::Stats::SOCKET_MAX_RETRIES + 1).times.and_raise(SocketError)
+        expect {
+          Percy::Stats.new('localhost', 1000, retry_count: 3, retry_delay: 0)
+        }.to raise_error(SocketError)
+      end
     end
   end
 
