@@ -1,6 +1,5 @@
 require 'datadog/statsd'
 require 'time'
-require 'pry'
 
 module Percy
   class Stats < ::Datadog::Statsd
