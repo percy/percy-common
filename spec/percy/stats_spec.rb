@@ -49,8 +49,20 @@ RSpec.describe Percy::Stats do
           :connect_to_socket,
         ).exactly(retries_count + 1).times.and_raise(SocketError)
         expect {
-          Percy::Stats.new('localhost', 1000, retry_count: retries_count, retry_delay: 0)
+          Percy::Stats.new('foo', 1000, retry_count: retries_count, retry_delay: 0)
         }.to raise_error(SocketError)
+      end
+
+      it 'raises SocketError with a domain that does not exist' do
+        expect {
+          Percy::Stats.new('foo', 1000, retry_count: retries_count, retry_delay: 0)
+        }.to raise_error(SocketError)
+      end
+
+      it 'does not raise a SocketError with a domain that exists' do
+        expect {
+          Percy::Stats.new('localhost', 1000, retry_count: retries_count, retry_delay: 0)
+        }.to_not raise_error
       end
     end
   end
