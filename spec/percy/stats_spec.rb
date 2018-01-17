@@ -26,9 +26,9 @@ RSpec.describe Percy::Stats do
     end
 
     context 'with a network failure' do
-      let(:retries_count) { 3 }
+      let(:retries_count) { 4 }
 
-      it 'retries the DNS query for the given host' do
+      it 'sets the host to localhost after the specified number of retries' do
         expect_any_instance_of(
           Datadog::Statsd,
         ).to receive(
@@ -38,31 +38,13 @@ RSpec.describe Percy::Stats do
           Datadog::Statsd,
         ).to receive(
           :connect_to_socket,
-        ).once.and_call_original
-        Percy::Stats.new('localhost', 1000, retry_count: retries_count, retry_delay: 0)
+        ).exactly(1).times
+        Percy::Stats.new('foo', 1000, retry_count: retries_count, retry_delay: 0)
       end
 
-      it 'gives up after the specified retries count' do
-        expect_any_instance_of(
-          Datadog::Statsd,
-        ).to receive(
-          :connect_to_socket,
-        ).exactly(retries_count + 1).times.and_raise(SocketError)
-        expect {
-          Percy::Stats.new('foo', 1000, retry_count: retries_count, retry_delay: 0)
-        }.to raise_error(SocketError)
-      end
-
-      it 'raises SocketError with a domain that does not exist' do
-        expect {
-          Percy::Stats.new('foo', 1000, retry_count: retries_count, retry_delay: 0)
-        }.to raise_error(SocketError)
-      end
-
-      it 'does not raise a SocketError with a domain that exists' do
-        expect {
-          Percy::Stats.new('localhost', 1000, retry_count: retries_count, retry_delay: 0)
-        }.to_not raise_error
+      it 'sets the host to localhost with a domain that does not exist' do
+        Percy::Stats.new('foo', 1000, retry_count: retries_count, retry_delay: 0)
+        expect(stats.host).to eq('localhost')
       end
     end
   end

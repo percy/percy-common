@@ -14,8 +14,8 @@ module Percy
 
       begin
         super(host, port, opts, max_buffer_size)
-      rescue SocketError => e
-        raise e if retries >= retry_count
+      rescue SocketError
+        host = 'localhost' if retries >= retry_count
         sleep retry_delay
         retries += 1
         retry
