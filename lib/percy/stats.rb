@@ -8,7 +8,18 @@ module Percy
       port ||= Integer(ENV.fetch('DATADOG_AGENT_PORT', ::Datadog::Statsd::DEFAULT_PORT))
       opts[:tags] ||= []
       opts[:tags] << "env:#{ENV['PERCY_ENV'] || 'development'}"
-      super(host, port, opts, max_buffer_size)
+      retry_delay = opts[:retry_delay] || 1
+      retry_count = opts[:retry_count] || 3
+      retries = 0
+
+      begin
+        super(host, port, opts, max_buffer_size)
+      rescue SocketError
+        host = 'localhost' if retries >= retry_count
+        sleep retry_delay
+        retries += 1
+        retry
+      end
     end
 
     # Equivalent to stats.time, but without wrapping in blocks and dealing with var scoping issues.

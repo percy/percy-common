@@ -18,7 +18,7 @@ RSpec.describe Percy::ProcessHelpers do
       expect(Percy::ProcessHelpers.gracefully_kill(non_existent_pid)).to eq(false)
     end
     it 'returns false if exit code has already been collected' do
-      pid = fork{}
+      pid = fork {}
       Process.wait(pid)
       expect(Percy::ProcessHelpers.gracefully_kill(pid)).to eq(false)
     end
