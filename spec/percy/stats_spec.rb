@@ -26,24 +26,14 @@ RSpec.describe Percy::Stats do
     end
 
     context 'with a network failure' do
-      let(:retries_count) { 4 }
+      let(:retries_count) { 2 }
+      let(:stats) { Percy::Stats.new('foo', 1000, retry_count: retries_count, retry_delay: 0) }
 
-      it 'sets the host to localhost after the specified number of retries' do
+      it 'sets the host to localhost after retries are exceeded' do
         expect_any_instance_of(
           Datadog::Statsd,
-        ).to receive(
-          :connect_to_socket,
-        ).exactly(retries_count).times.and_raise(SocketError)
-        expect_any_instance_of(
-          Datadog::Statsd,
-        ).to receive(
-          :connect_to_socket,
-        ).exactly(1).times
-        Percy::Stats.new('foo', 1000, retry_count: retries_count, retry_delay: 0)
-      end
+        ).to receive(:connect_to_socket).at_least(retries_count).times.and_call_original
 
-      it 'sets the host to localhost with a domain that does not exist' do
-        Percy::Stats.new('foo', 1000, retry_count: retries_count, retry_delay: 0)
         expect(stats.host).to eq('localhost')
       end
     end
