@@ -17,7 +17,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   # Pinned as we rely on `time_since` which was taken out after this version.
-  spec.add_dependency 'dogstatsd-ruby', '3.2.0'
+  spec.add_dependency 'dogstatsd-ruby', '4.2.0'
 
   spec.add_dependency 'excon', '~> 0.57'
 
