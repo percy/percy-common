@@ -39,5 +39,8 @@ module Percy
       @_timing_start = nil
       true
     end
+
+    # Expose dogstatsd's `time_since` as a public method.
+    public :time_since
   end
 end
