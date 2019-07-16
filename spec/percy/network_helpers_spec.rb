@@ -15,6 +15,7 @@ RSpec.describe Percy::NetworkHelpers do
       Thread.new { server.start }
       sleep 0.25 # Give the server time to boot.
     end
+
     after(:each) do
       server.shutdown
     end
@@ -54,12 +55,14 @@ RSpec.describe Percy::NetworkHelpers do
     it 'returns true if server is up and responds to healthcheck' do
       expect(Percy::NetworkHelpers.verify_healthcheck(url: server_url + '/healthz')).to eq(true)
     end
+
     it 'raises error if server fails healthcheck' do
       expect do
         Percy::NetworkHelpers.verify_healthcheck(url: server_url + '/', retry_wait_seconds: 0)
       end.to raise_error(Percy::NetworkHelpers::ServerDown)
     end
   end
+
   describe '#verify_http_server_up' do
     context 'when server is up' do
       include_context 'with test HTTP server'
@@ -69,6 +72,7 @@ RSpec.describe Percy::NetworkHelpers do
         expect(result).to eq(true)
       end
     end
+
     it 'raises error if server is not up' do
       expect do
         Percy::NetworkHelpers.verify_http_server_up(
@@ -79,8 +83,9 @@ RSpec.describe Percy::NetworkHelpers do
       end.to raise_error(Percy::NetworkHelpers::ServerDown)
     end
   end
+
   describe '#serve_static_directory' do
-    let(:test_data_dir) { File.expand_path('../test_data/', __FILE__) }
+    let(:test_data_dir) { File.expand_path('test_data', __dir__) }
 
     it 'serves a static directory' do
       pid = Percy::NetworkHelpers.serve_static_directory(test_data_dir)
