@@ -2,6 +2,10 @@ inherit_gem:
   percy-style:
     - default.yml
 
+inherit_mode:
+  merge:
+    - Include
+
 RSpec/DescribeClass:
   Exclude:
     - spec/percy/logger_spec.rb

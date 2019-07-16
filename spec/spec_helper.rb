@@ -1,4 +1,6 @@
-$LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
+$LOAD_PATH.unshift File.expand_path('../lib', __dir__)
+
+ENV['PERCY_ENV'] ||= 'test'
 
 require 'percy/common'
 
@@ -25,7 +27,4 @@ RSpec.configure do |config|
   # test failures related to randomization by passing the same `--seed` value
   # as the one that triggered the failure.
   Kernel.srand config.seed
-
-  # Set the PERCY_ENV variable so stat tags are set correctly.
-  config.before(:all) { ENV['PERCY_ENV'] = 'test' }
 end
