@@ -26,17 +26,11 @@ RSpec.describe Percy::Stats do
     expect(stats.tags).to eq(['env:test'])
   end
 
-  describe 'start_timing' do
-    it 'returns the current step index for the given stat' do
-      expect(stats.start_timing).to eq(true)
-    end
-  end
-
   describe 'stop_timing' do
     it 'stops timing and records the time difference' do
-      expect(stats).to receive(:time_since)
+      expect(stats).to receive(:time_since_monotonic)
         .with('foo.bar.step1', instance_of(Float), priority: :low).and_call_original
-      expect(stats).to receive(:time_since)
+      expect(stats).to receive(:time_since_monotonic)
         .with('foo.bar.step2', instance_of(Float), priority: :low).and_call_original
 
       stats.start_timing
@@ -52,6 +46,23 @@ RSpec.describe Percy::Stats do
       stats.start_timing
       stats.stop_timing('foo.bar.step1')
       expect { stats.stop_timing('foo.bar.step2') }.to raise_error(RuntimeError)
+    end
+  end
+
+  describe 'time_since' do
+    let(:start) { Time.now }
+
+    it 'returns an interval' do
+      expect(stats.time_since('foo.bar', start)).to be_instance_of Integer
+    end
+
+    context 'with a float value' do
+      let(:start) { Process.clock_gettime(Process::CLOCK_MONOTONIC) }
+
+      it 'raises ArgumentError' do
+        expect { stats.time_since('foo.bar', start) }.to \
+          raise_error(ArgumentError)
+      end
     end
   end
 end
