@@ -55,7 +55,7 @@ module Percy
     # available.
     def time_since_monotonic(stat, start, opts = {})
       unless start.instance_of? Float
-        raise ArgumentError, "start value must be Float"
+        raise ArgumentError, 'start value must be Float'
       end
 
       timing(stat, ((now.to_f - start.to_f) * 1000).round, opts)
@@ -63,7 +63,7 @@ module Percy
 
     def time_since(stat, start, opts = {})
       unless start.instance_of? Time
-        raise ArgumentError, "start value must be Time"
+        raise ArgumentError, 'start value must be Time'
       end
 
       timing(stat, ((Time.now.to_f - start.to_f) * 1000).round, opts)
