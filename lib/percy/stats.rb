@@ -44,13 +44,29 @@ module Percy
       # Programmer mistake, so raise an error.
       raise 'no timing started' unless @_timing_start
 
-      time_since(stat, @_timing_start, options)
+      time_since_monotonic(stat, @_timing_start, options)
       @_timing_start = nil
       true
     end
 
-    def time_since(stat, start, opts = {})
+    # dogstatsd uses a monotonic (linearly increasing) clock to calculate time
+    # intervals, so this should be used where necessary. However, it's not
+    # possible to compare monotonic time values with fixed times, so both are
+    # available.
+    def time_since_monotonic(stat, start, opts = {})
+      unless start.instance_of? Float
+        raise ArgumentError, 'start value must be Float'
+      end
+
       timing(stat, ((now.to_f - start.to_f) * 1000).round, opts)
+    end
+
+    def time_since(stat, start, opts = {})
+      unless start.instance_of? Time
+        raise ArgumentError, 'start value must be Time'
+      end
+
+      timing(stat, ((Time.now.to_f - start.to_f) * 1000).round, opts)
     end
 
     private def now
