@@ -16,7 +16,7 @@ Gem::Specification.new do |spec|
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
   spec.require_paths = ['lib']
 
-  spec.add_dependency 'dogstatsd-ruby', '~> 4.4.0'
+  spec.add_dependency 'dogstatsd-ruby', '>= 4.4', '< 4.8'
   spec.add_dependency 'excon', '~> 0.57'
 
   spec.add_development_dependency 'bundler', '~> 2.0.2'
