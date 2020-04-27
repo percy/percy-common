@@ -1,0 +1,85 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 10339355087637423182 (0x8f7cc4ac0541a44e)
+    Signature Algorithm: sha1WithRSAEncryption
+        Issuer: C=IT, ST=Sicily, L=Catania, O=Redis, OU=Security, CN=127.0.0.1
+        Validity
+            Not Before: Aug  2 17:53:24 2019 GMT
+            Not After : Oct 22 17:53:24 2053 GMT
+        Subject: C=IT, ST=Sicily, O=Redis, OU=Security, CN=127.0.0.1
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+                Public-Key: (2048 bit)
+                Modulus:
+                    00:c9:22:82:3b:d8:af:16:32:f8:46:f1:f1:77:d5:
+                    83:ea:32:66:05:a9:30:ae:1d:46:38:8c:a6:5e:04:
+                    22:f9:a3:17:53:e0:c6:51:1e:88:e0:05:69:9a:c1:
+                    0f:49:0c:aa:07:fa:e3:97:16:02:a7:eb:a3:d5:82:
+                    8c:d4:98:5b:9e:14:53:49:90:c1:37:74:10:91:0f:
+                    ca:83:0c:9b:1b:36:24:f5:47:6a:74:51:9e:91:5b:
+                    5e:2e:12:2b:af:05:db:10:4c:74:b2:f7:5f:a5:fd:
+                    08:52:1c:c2:9d:b7:c6:ad:03:25:3a:7c:6b:48:94:
+                    68:93:42:93:4f:f9:59:ce:31:79:0f:ad:d3:8f:12:
+                    82:a5:48:e8:0c:82:71:e2:5a:81:fc:c3:b7:cf:c8:
+                    c5:28:9e:65:0a:73:2e:a7:83:e1:b0:8f:da:d5:08:
+                    73:74:9e:26:f0:07:4f:33:da:5d:84:b8:0b:e1:ad:
+                    a4:96:e3:ba:db:51:e5:ef:31:be:eb:6f:a7:81:5d:
+                    ca:d7:94:ed:42:0b:0b:3b:15:14:d6:b1:a4:ea:b9:
+                    60:36:7a:1e:6e:c0:61:55:48:66:64:2b:76:00:a9:
+                    63:13:74:af:f8:47:ab:b5:26:ed:84:c7:2c:fa:91:
+                    c9:02:6c:9f:00:67:b8:4c:81:4b:c2:5d:63:9c:cc:
+                    e3:ab
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Basic Constraints: 
+                CA:FALSE
+            Netscape Comment: 
+                OpenSSL Generated Certificate
+            X509v3 Subject Key Identifier: 
+                A1:17:B2:DB:32:43:57:79:40:A0:C7:BB:2E:EC:AA:1C:47:76:AB:5A
+            X509v3 Authority Key Identifier: 
+                DirName:/C=IT/ST=Sicily/L=Catania/O=Redis/OU=Security/CN=127.0.0.1
+                serial:8F:7C:C4:AC:05:41:A4:4D
+
+    Signature Algorithm: sha1WithRSAEncryption
+         3a:3b:85:4d:f1:37:a3:98:e9:59:f4:d6:cd:6a:ed:f8:2d:38:
+         f9:ed:4f:81:ba:d4:ce:0e:bf:10:ce:db:2e:9b:5b:06:30:94:
+         68:4f:ea:ae:51:31:c7:46:23:42:a6:2a:66:a9:49:b8:6d:59:
+         45:4f:4e:d3:7d:57:6f:97:bc:47:45:68:fa:61:8f:a7:0e:24:
+         fd:58:a6:1d:f2:2c:40:ce:38:22:39:6e:ab:ec:ff:11:11:a5:
+         2c:9a:b1:7d:3e:d4:d7:01:07:10:af:79:bd:65:66:58:5e:48:
+         1c:40:d8:34:bb:ad:b0:7e:49:32:6e:a1:fc:8a:b2:c0:79:40:
+         ca:2a:f6:c9:5d:87:07:0a:23:fc:79:09:0f:88:60:b5:7c:b6:
+         53:10:09:5c:d5:21:2b:6b:ac:8f:24:69:65:23:9a:6c:7a:19:
+         0f:b7:dd:d1:46:c2:45:b8:0a:c8:c8:7d:84:fe:77:09:02:20:
+         8d:4b:86:35:ea:2e:08:2b:db:08:25:77:06:6d:ba:bc:ac:8b:
+         9d:5b:a1:8e:ea:5e:c7:3d:63:f8:3a:35:33:5b:b0:82:e7:dc:
+         52:48:45:21:b4:d8:30:57:e1:3b:10:3c:27:68:2e:65:b5:24:
+         84:f5:f3:98:ca:92:8d:43:0e:fb:7f:94:8a:a3:1d:53:f8:4f:
+         ba:43:2b:61
+-----BEGIN CERTIFICATE-----
+MIIEITCCAwmgAwIBAgIJAI98xKwFQaROMA0GCSqGSIb3DQEBBQUAMGcxCzAJBgNV
+BAYTAklUMQ8wDQYDVQQIDAZTaWNpbHkxEDAOBgNVBAcMB0NhdGFuaWExDjAMBgNV
+BAoMBVJlZGlzMREwDwYDVQQLDAhTZWN1cml0eTESMBAGA1UEAwwJMTI3LjAuMC4x
+MCAXDTE5MDgwMjE3NTMyNFoYDzIwNTMxMDIyMTc1MzI0WjBVMQswCQYDVQQGEwJJ
+VDEPMA0GA1UECAwGU2ljaWx5MQ4wDAYDVQQKDAVSZWRpczERMA8GA1UECwwIU2Vj
+dXJpdHkxEjAQBgNVBAMMCTEyNy4wLjAuMTCCASIwDQYJKoZIhvcNAQEBBQADggEP
+ADCCAQoCggEBAMkigjvYrxYy+Ebx8XfVg+oyZgWpMK4dRjiMpl4EIvmjF1PgxlEe
+iOAFaZrBD0kMqgf645cWAqfro9WCjNSYW54UU0mQwTd0EJEPyoMMmxs2JPVHanRR
+npFbXi4SK68F2xBMdLL3X6X9CFIcwp23xq0DJTp8a0iUaJNCk0/5Wc4xeQ+t048S
+gqVI6AyCceJagfzDt8/IxSieZQpzLqeD4bCP2tUIc3SeJvAHTzPaXYS4C+GtpJbj
+uttR5e8xvutvp4FdyteU7UILCzsVFNaxpOq5YDZ6Hm7AYVVIZmQrdgCpYxN0r/hH
+q7Um7YTHLPqRyQJsnwBnuEyBS8JdY5zM46sCAwEAAaOB3zCB3DAJBgNVHRMEAjAA
+MCwGCWCGSAGG+EIBDQQfFh1PcGVuU1NMIEdlbmVyYXRlZCBDZXJ0aWZpY2F0ZTAd
+BgNVHQ4EFgQUoRey2zJDV3lAoMe7LuyqHEd2q1owgYEGA1UdIwR6MHiha6RpMGcx
+CzAJBgNVBAYTAklUMQ8wDQYDVQQIDAZTaWNpbHkxEDAOBgNVBAcMB0NhdGFuaWEx
+DjAMBgNVBAoMBVJlZGlzMREwDwYDVQQLDAhTZWN1cml0eTESMBAGA1UEAwwJMTI3
+LjAuMC4xggkAj3zErAVBpE0wDQYJKoZIhvcNAQEFBQADggEBADo7hU3xN6OY6Vn0
+1s1q7fgtOPntT4G61M4OvxDO2y6bWwYwlGhP6q5RMcdGI0KmKmapSbhtWUVPTtN9
+V2+XvEdFaPphj6cOJP1Yph3yLEDOOCI5bqvs/xERpSyasX0+1NcBBxCveb1lZlhe
+SBxA2DS7rbB+STJuofyKssB5QMoq9sldhwcKI/x5CQ+IYLV8tlMQCVzVIStrrI8k
+aWUjmmx6GQ+33dFGwkW4CsjIfYT+dwkCII1LhjXqLggr2wgldwZturysi51boY7q
+Xsc9Y/g6NTNbsILn3FJIRSG02DBX4TsQPCdoLmW1JIT185jKko1DDvt/lIqjHVP4
+T7pDK2E=
+-----END CERTIFICATE-----
