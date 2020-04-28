@@ -4,6 +4,8 @@ require 'spec_helper'
 require_relative '../../lib/percy/redis.rb'
 
 RSpec.describe Percy::Redis do
+  attr_reader :port
+
   shared_examples 'redis client' do
     it 'returns a ::Redis instance' do
       instance = Percy::Redis.new(options)
@@ -23,7 +25,7 @@ RSpec.describe Percy::Redis do
     end
 
     context 'with a standard redis URL' do
-      let(:redis_url) { "redis://127.0.0.1:#{@port}" }
+      let(:redis_url) { "redis://127.0.0.1:#{port}" }
 
       context 'with just a URL' do
         let(:options) { {url: redis_url} }
@@ -41,7 +43,7 @@ RSpec.describe Percy::Redis do
 
   context 'with a SSL-enabled redis URL' do
     context 'with a mock redis server' do
-      let(:redis_url) { "rediss://127.0.0.1:#{@port}" }
+      let(:redis_url) { "rediss://127.0.0.1:#{port}" }
       let(:options) { {url: redis_url} }
 
       around(:each) do |example|
