@@ -18,7 +18,13 @@ module Percy
     end
 
     private def ssl_enabled?
-      options[:url]&.start_with?('rediss://')
+      return false unless provided_url
+
+      provided_url.to_s.start_with?('rediss://')
+    end
+
+    private def provided_url
+      options.dig(:url)
     end
 
     private def ssl_params
