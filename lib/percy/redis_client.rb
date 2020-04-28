@@ -3,7 +3,7 @@
 require 'redis'
 
 module Percy
-  class Redis
+  class RedisClient
     attr_reader :options
     attr_reader :client
 

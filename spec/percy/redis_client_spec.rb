@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
-require_relative '../../lib/percy/redis.rb'
+require_relative '../../lib/percy/redis_client.rb'
 
-RSpec.describe Percy::Redis do
+RSpec.describe Percy::RedisClient do
   attr_reader :port
 
   shared_examples 'redis client' do
     it 'returns a ::Redis instance' do
-      instance = Percy::Redis.new(options)
+      instance = Percy::RedisClient.new(options)
 
       expect(instance.client).to be_a ::Redis
       expect(instance.client.ping).to eq 'PONG'
