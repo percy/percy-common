@@ -18,8 +18,6 @@ module Percy
     end
 
     private def ssl_enabled?
-      return false unless provided_url
-
       provided_url.to_s.start_with?('rediss://')
     end
 
