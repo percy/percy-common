@@ -24,6 +24,20 @@ RSpec.describe Percy::RedisClient do
       end
     end
 
+    context 'without a redis URL' do
+      context 'without any options' do
+        let(:options) { {} }
+
+        it 'reverts to the default host and port' do
+          instance = Percy::RedisClient.new(options)
+
+          expect(instance.client).to be_a ::Redis
+          expect(instance.client.connection.dig(:host)).to eq('127.0.0.1')
+          expect(instance.client.connection.dig(:port)).to eq(6379)
+        end
+      end
+    end
+
     context 'with a standard redis URL' do
       let(:redis_url) { "redis://127.0.0.1:#{port}" }
 
