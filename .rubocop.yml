@@ -9,3 +9,7 @@ inherit_mode:
 RSpec/DescribeClass:
   Exclude:
     - spec/percy/logger_spec.rb
+
+AllCops:
+  Exclude:
+    - spec/support/redis_mock.rb

@@ -1,5 +1,4 @@
-# coding: utf-8
-lib = File.expand_path('../lib', __FILE__)
+lib = File.expand_path('lib', __dir__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'percy/common/version'
 
@@ -9,19 +8,22 @@ Gem::Specification.new do |spec|
   spec.authors       = ['Perceptual Inc.']
   spec.email         = ['team@percy.io']
 
-  spec.summary       = %q{Server-side common library for Percy.}
-  spec.description   = %q{}
+  spec.summary       = 'Server-side common library for Percy.'
+  spec.description   = ''
   spec.homepage      = ''
 
-  spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
+  spec.files         = `git ls-files -z`.split("\x0").reject do |f|
+    f.match(/^(test|spec|features)\//)
+  end
   spec.require_paths = ['lib']
 
   spec.add_dependency 'dogstatsd-ruby', '~> 4.4.0'
   spec.add_dependency 'excon', '~> 0.57'
+  spec.add_dependency 'redis', '~> 4.1.3'
 
-  spec.add_development_dependency 'bundler', '~> 2.0.2'
-  spec.add_development_dependency 'rake', '~> 12.3'
-  spec.add_development_dependency 'rspec', '~> 3.2'
+  spec.add_development_dependency 'bundler', '~> 2.1.4'
   spec.add_development_dependency 'guard-rspec', '~> 4.7'
   spec.add_development_dependency 'percy-style', '~> 0.6.0'
+  spec.add_development_dependency 'rake', '~> 12.3'
+  spec.add_development_dependency 'rspec', '~> 3.2'
 end
