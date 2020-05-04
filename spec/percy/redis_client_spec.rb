@@ -55,7 +55,7 @@ RSpec.describe Percy::RedisClient do
     end
   end
 
-  context 'with a SSL-enabled redis URL' do
+  context 'with an SSL-enabled redis URL' do
     context 'with a mock redis server' do
       let(:redis_url) { "rediss://127.0.0.1:#{port}" }
       let(:options) { {url: redis_url} }
