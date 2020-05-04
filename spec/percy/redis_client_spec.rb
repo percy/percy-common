@@ -106,4 +106,58 @@ RSpec.describe Percy::RedisClient do
       end
     end
   end
+
+  context 'with explicit SSL redis parameters' do
+    context 'with a mock redis server' do
+      let(:redis_url) { "rediss://127.0.0.1:#{port}" }
+      let(:options) { ssl_server_opts.merge(url: redis_url) }
+      let(:ssl_cert) { OpenSSL::X509::Certificate.new(File.read(ssl_cert_path)) }
+      let(:ssl_key) { OpenSSL::PKey::RSA.new(File.read(ssl_key_path)) }
+
+      around(:each) do |example|
+        RedisMock.start({ping: proc { '+PONG' }}, ssl_server_opts) do |port|
+          @port = port
+          example.run
+          @port = nil
+        end
+      end
+
+      it_behaves_like 'redis client'
+
+      it 'has the correct options' do
+        expect(options[:url]).to eq(redis_url)
+        expect(options[:ssl]).to eq(true)
+        expect(options[:ssl_params][:ca_file]).to eq(ssl_ca_path)
+        expect(options[:ssl_params][:cert]).to eq(ssl_cert)
+        expect(options[:ssl_params][:key]).to eq(ssl_key)
+      end
+
+      def ssl_server_opts
+        {
+          ssl: true,
+          ssl_params: {
+            ca_file: ssl_ca_path,
+            cert: ssl_cert,
+            key: ssl_key,
+          },
+        }
+      end
+
+      def ssl_cert_path
+        File.join(cert_path, 'trusted-cert.crt')
+      end
+
+      def ssl_key_path
+        File.join(cert_path, 'trusted-cert.key')
+      end
+
+      def ssl_ca_path
+        File.join(cert_path, 'trusted-ca.crt')
+      end
+
+      def cert_path
+        File.expand_path('../support/ssl', __dir__)
+      end
+    end
+  end
 end

@@ -8,13 +8,8 @@ module Percy
     attr_reader :client
 
     def initialize(options = {})
-      @options = options
-      @client = ::Redis.new(
-        options.merge(
-          ssl: ssl_enabled?,
-          ssl_params: ssl_params,
-        ),
-      )
+      @options = ssl_options.merge(options)
+      @client = ::Redis.new(options)
     end
 
     private def ssl_enabled?
@@ -23,6 +18,13 @@ module Percy
 
     private def provided_url
       options.dig(:url)
+    end
+
+    private def ssl_options
+      {
+        ssl: ssl_enabled?,
+        ssl_params: ssl_params,
+      }
     end
 
     private def ssl_params
