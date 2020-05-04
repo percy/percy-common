@@ -17,7 +17,7 @@ module Percy
     end
 
     private def provided_url
-      options.dig(:url)
+      options&.dig(:url)
     end
 
     private def ssl_options
