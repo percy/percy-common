@@ -11,6 +11,7 @@ RSpec.describe Percy::RedisClient do
       instance = Percy::RedisClient.new(options)
 
       expect(instance.client).to be_a ::Redis
+      expect(instance.send(:ssl_enabled?)).to eq(ssl_expected)
       expect(instance.client.ping).to eq 'PONG'
     end
   end
@@ -27,6 +28,7 @@ RSpec.describe Percy::RedisClient do
     context 'without a redis URL' do
       context 'without any options' do
         let(:options) { {} }
+        let(:ssl_expected) { false }
 
         it 'reverts to the default host and port' do
           instance = Percy::RedisClient.new(options)
@@ -40,6 +42,7 @@ RSpec.describe Percy::RedisClient do
 
     context 'with a standard redis URL' do
       let(:redis_url) { "redis://127.0.0.1:#{port}" }
+      let(:ssl_expected) { false }
 
       context 'with just a URL' do
         let(:options) { {url: redis_url} }
@@ -49,6 +52,7 @@ RSpec.describe Percy::RedisClient do
 
       context 'with other options' do
         let(:options) { {url: redis_url, password: 1234, id: nil} }
+        let(:ssl_expected) { false }
 
         it_behaves_like 'redis client'
       end
@@ -59,9 +63,9 @@ RSpec.describe Percy::RedisClient do
     context 'with a mock redis server' do
       let(:redis_url) { "rediss://127.0.0.1:#{port}" }
       let(:options) { {url: redis_url} }
+      let(:ssl_expected) { true }
 
       around(:each) do |example|
-        ENV['REDIS_SSL_CERTIFICATE_PATH'] = ssl_cert_path
         ENV['REDIS_SSL_PRIVATE_KEY_PATH'] = ssl_key_path
         ENV['REDIS_SSL_CERTIFICATE_AUTHORITY_PATH'] = ssl_ca_path
         ENV['REDIS_SSL_CLIENT_CERTIFICATE_PATH'] = ssl_cert_path
@@ -70,7 +74,6 @@ RSpec.describe Percy::RedisClient do
           example.run
           @port = nil
         end
-        ENV['REDIS_SSL_CERTIFICATE_PATH'] = nil
         ENV['REDIS_SSL_PRIVATE_KEY_PATH'] = nil
         ENV['REDIS_SSL_CERTIFICATE_AUTHORITY_PATH'] = nil
         ENV['REDIS_SSL_CLIENT_CERTIFICATE_PATH'] = nil
@@ -113,6 +116,7 @@ RSpec.describe Percy::RedisClient do
       let(:options) { ssl_server_opts.merge(url: redis_url) }
       let(:ssl_cert) { OpenSSL::X509::Certificate.new(File.read(ssl_cert_path)) }
       let(:ssl_key) { OpenSSL::PKey::RSA.new(File.read(ssl_key_path)) }
+      let(:ssl_expected) { true }
 
       around(:each) do |example|
         RedisMock.start({ping: proc { '+PONG' }}, ssl_server_opts) do |port|
