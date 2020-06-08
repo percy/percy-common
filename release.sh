@@ -22,7 +22,10 @@ delete_existing_version() {
   gem yank "percy-common$1.gem" || true
 }
 
-if [[ $1 == 'delete' ]]; then
+if [[ $1 =~ ^.*delete$ ]]; then
+  shift
+  echo "Preparing to delete $1"
+  sleep 3
   delete_existing_version "$PERCY_COMMON_VERSION"
 else
   CLEAN=$(
