@@ -11,7 +11,7 @@ module Percy
 
     def initialize(given_options = {})
       @provided_options = given_options
-      @options = ssl_params.merge(given_options)
+      @options = ssl_options.merge(given_options)
       @client = ::Redis.new(options)
     end
 
