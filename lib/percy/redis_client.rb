@@ -74,7 +74,6 @@ module Percy
 
     private def certificate_authority
       provided_certificate_authority ||
-        certificate_authority_from_env ||
         certificate_authority_from_path
     end
 
@@ -82,12 +81,8 @@ module Percy
       @provided_options&.dig(:ssl_params, :ca_file)
     end
 
-    private def certificate_authority_from_env
-      ENV['REDIS_SSL_CERTIFICATE_AUTHORITY']
-    end
-
     private def certificate_authority_from_path
-      File.read(fetch_key('REDIS_SSL_CERTIFICATE_AUTHORITY_PATH'))
+      fetch_key('REDIS_SSL_CERTIFICATE_AUTHORITY_PATH')
     end
 
     private def fetch_key(key)
