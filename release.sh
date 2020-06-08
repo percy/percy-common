@@ -53,9 +53,9 @@ else
     git push origin "v$VERSION" || true
 
     bundle exec rake build
-    gem push "$CURDIR/pkg/percy-common-$VERSION.gem"
+    gem push "$CURDIR/pkg/percy-common-"*.gem
     open "https://github.com/percy/percy-common/releases/new?tag=v$VERSION&title=$VERSION"
-    rm "$CURDIR/pkg/percy-common-$VERSION.gem"
+    rm "$CURDIR/pkg/percy-common-"*.gem
   else
     echo "Please commit your changes and try again"
     exit 1
