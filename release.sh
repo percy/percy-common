@@ -19,7 +19,7 @@ rm "$CURDIR/"percy-common*.gem >/dev/null 2>&1 || true
 delete_existing_version() {
   git tag -d "v$1" || true
   git push origin ":v$1" || true
-  gem yank "percy-common$1.gem" || true
+  gem yank percy-common -v "$1" || true
 }
 
 if [[ $1 =~ ^.*delete$ ]]; then
