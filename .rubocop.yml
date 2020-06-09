@@ -1,3 +1,5 @@
+inherit_from: .rubocop_todo.yml
+
 inherit_gem:
   percy-style:
     - default.yml
@@ -9,3 +11,7 @@ inherit_mode:
 RSpec/DescribeClass:
   Exclude:
     - spec/percy/logger_spec.rb
+
+AllCops:
+  Exclude:
+    - spec/support/redis_mock.rb

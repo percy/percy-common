@@ -1,5 +1,5 @@
 module Percy
   module Common
-    VERSION = '3.0.1'.freeze
+    VERSION = '3.1.2'.freeze
   end
 end
