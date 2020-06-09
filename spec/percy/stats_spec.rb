@@ -4,6 +4,11 @@ RSpec.describe Percy::Stats do
   let(:stats) { Percy::Stats.new }
 
   context 'without env vars' do
+    it 'assigns default constant values' do
+      expect(Percy::Stats::DEFAULT_HOST).to eq('127.0.0.1')
+      expect(Percy::Stats::DEFAULT_PORT).to eq(8125)
+    end
+
     it 'sets host and port from defaults' do
       expect(stats.connection.host).to eq '127.0.0.1'
       expect(stats.connection.port).to eq 8125

@@ -5,13 +5,13 @@ module Percy
   class Stats < ::Datadog::Statsd
     DEFAULT_HOST = ENV.fetch(
       'DATADOG_AGENT_HOST',
-      ::Datadog::Statsd::Connection::DEFAULT_HOST,
+      ::Datadog::Statsd::UDPConnection::DEFAULT_HOST,
     )
 
     DEFAULT_PORT = Integer(
       ENV.fetch(
         'DATADOG_AGENT_PORT',
-        ::Datadog::Statsd::Connection::DEFAULT_PORT,
+        ::Datadog::Statsd::UDPConnection::DEFAULT_PORT,
       ),
     )
 
