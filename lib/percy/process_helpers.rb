@@ -17,7 +17,12 @@ module Percy
         # Status has already been collected, perhaps by a Process.detach thread.
         return false
       rescue Timeout::Error
-        Process.kill('KILL', pid)
+        begin
+          Process.kill('KILL', pid)
+        rescue Errno::ESRCH
+          # If the process has already ended, suppress any additional errors
+          return false
+        end
         # Collect status so it doesn't stick around as zombie process.
         Process.wait(pid, Process::WNOHANG)
       end
