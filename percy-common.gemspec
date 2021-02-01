@@ -21,7 +21,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'excon', '~> 0.57'
   spec.add_dependency 'redis', '>= 4.1.3', '< 5.0.0'
 
-  spec.add_development_dependency 'bundler', '~> 2.1.4'
+  spec.add_development_dependency 'bundler', '~> 2.2.7'
   spec.add_development_dependency 'guard-rspec', '~> 4.7'
   spec.add_development_dependency 'percy-style', '~> 0.7.0'
   spec.add_development_dependency 'rake', '~> 13.0'
