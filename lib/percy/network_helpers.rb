@@ -31,7 +31,7 @@ module Percy
     def self.verify_healthcheck(url:, expected_body: 'ok', retry_wait_seconds: 0.5, proxy: nil)
       10.times do
         begin
-          response = Excon.get(url, :proxy: proxy)
+          response = Excon.get(url, proxy: proxy)
           return true if response.body == expected_body
         rescue Excon::Error::Socket, Excon::Error::Timeout
           sleep retry_wait_seconds
@@ -40,11 +40,12 @@ module Percy
       raise ServerDown, "Healthcheck failed for #{url}"
     end
 
-    def self.verify_http_server_up(hostname, port: nil, path: nil, retry_wait_seconds: 0.25, proxy: nil)
+    def self.verify_http_server_up(hostname, port: nil,
+      path: nil, retry_wait_seconds: 0.25, proxy: nil)
       10.times do
         begin
           url = "http://#{hostname}#{port.nil? ? '' : ':' + port.to_s}#{path || ''}"
-          Excon.get(url, :proxy: proxy)
+          Excon.get(url, proxy: proxy)
           return true
         rescue Excon::Error::Socket, Excon::Error::Timeout
           sleep retry_wait_seconds
