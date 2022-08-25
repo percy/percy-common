@@ -1,0 +1,30 @@
+steps:
+  - label: ':rubocop: Lint'
+    agents:
+      os: "linux"
+    command:
+      - make lint
+
+  - label: ':rspec: Test Ruby 2.6'
+    agents:
+      os: "linux"
+    env:
+      BASE_IMAGE: "ruby:2.6-alpine"
+    command:
+      - make test
+
+  - label: ':rspec: Test Ruby 2.7'
+    agents:
+      os: "linux"
+    env:
+      BASE_IMAGE: "ruby:2.7-alpine"
+    command:
+      - make test
+
+  - label: ':rspec: Test Ruby 3.0'
+    agents:
+      os: "linux"
+    env:
+      BASE_IMAGE: "ruby:3.0-alpine"
+    command:
+      - make test
