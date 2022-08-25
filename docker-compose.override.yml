@@ -4,4 +4,3 @@ services:
   app:
     volumes:
       - .:/app/src
-    command: ['sh', '-c', 'tail -f /dev/null']

@@ -1,7 +1,7 @@
 ARG BASE_IMAGE
 FROM $BASE_IMAGE
 
-RUN apk update && apk add alpine-sdk less
+RUN apk update && apk add alpine-sdk
 RUN gem install bundler
 
 ADD . /app/src
