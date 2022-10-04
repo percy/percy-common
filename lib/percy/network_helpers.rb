@@ -29,7 +29,7 @@ module Percy
     end
 
     def self.verify_healthcheck(url:, expected_body: 'ok', retry_wait_seconds: 0.5, proxy: nil,
-      headers: nil)
+      headers: {})
       10.times do
         begin
           response = Excon.get(url, proxy: proxy, headers: headers)
@@ -42,7 +42,7 @@ module Percy
     end
 
     def self.verify_http_server_up(hostname, port: nil,
-      path: nil, retry_wait_seconds: 0.25, proxy: nil, headers: nil)
+      path: nil, retry_wait_seconds: 0.25, proxy: nil, headers: {})
       10.times do
         begin
           url = "http://#{hostname}#{port.nil? ? '' : ':' + port.to_s}#{path || ''}"
