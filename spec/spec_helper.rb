@@ -7,7 +7,7 @@ require 'pathname'
 
 Dir[
   Pathname.new(__dir__).join('support', '**', '*.rb'),
-].each { |f| require f }
+].sort.each { |f| require f }
 
 RSpec.configure do |config|
   config.expect_with :rspec do |expectations|
