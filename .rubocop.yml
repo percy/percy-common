@@ -12,6 +12,8 @@ RSpec/DescribeClass:
   Exclude:
     - spec/percy/logger_spec.rb
 
+# TODO: disable new cops
 AllCops:
+  TargetRubyVersion: 2.6
   Exclude:
     - spec/support/redis_mock.rb
