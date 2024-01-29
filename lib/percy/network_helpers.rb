@@ -10,9 +10,9 @@ module Percy
     class ServerDown < RuntimeError; end
     class OpenPortNotFound < RuntimeError; end
 
-    def self.random_open_port
+    def self.random_open_port(min_port: MIN_PORT, max_port: MAX_PORT)
       MAX_PORT_ATTEMPTS.times do
-        port = rand(MIN_PORT..MAX_PORT)
+        port = rand(min_port..max_port)
         return port if port_open? port
       end
 
