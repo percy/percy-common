@@ -22,9 +22,16 @@ RSpec.describe Percy::NetworkHelpers do
   end
 
   describe '#random_open_port' do
+    let(:custom_min_port) { 1026 }
+    let(:custom_max_port) { 1028 }
     it 'returns a random open port in the desired range' do
       expect(Percy::NetworkHelpers.random_open_port).to be >= described_class::MIN_PORT
       expect(Percy::NetworkHelpers.random_open_port).to be <= described_class::MAX_PORT
+    end
+
+    it 'return a random open port in the user given range' do
+      expect(Percy::NetworkHelpers.random_open_port(min_port: custom_min_port, max_port: custom_max_port)).to be >= custom_min_port
+      expect(Percy::NetworkHelpers.random_open_port(min_port: custom_min_port, max_port: custom_max_port)).to be <= custom_max_port
     end
 
     it 'raises an error when an open port is not found' do
