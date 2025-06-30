@@ -16,7 +16,7 @@ Or, for a Ruby library, add this to your gemspec:
 spec.add_development_dependency 'percy-common'
 ```
 
-And then run:
+And then run
 
 ```bash
 $ bundle install
