@@ -81,8 +81,7 @@ RSpec.describe Percy::MetricsBuffer do
       expect(timer[:sum]).to be >= 10
     end
 
-    it 'tracks min/max/sum/count across multiple calls' do
-      # Use histogram directly to control exact values
+    it 'tracks min/max/sum/count/values across multiple calls' do
       buffer.timing('method', 5)
       buffer.timing('method', 100)
       buffer.timing('method', 3)
@@ -93,6 +92,26 @@ RSpec.describe Percy::MetricsBuffer do
       expect(timer[:max]).to eq(100)
       expect(timer[:sum]).to eq(108)
       expect(timer[:count]).to eq(3)
+      expect(timer[:values]).to eq([5, 100, 3])
+    end
+  end
+
+  describe 'MAX_TIMING_VALUES cap' do
+    it 'limits stored values to prevent unbounded memory growth' do
+      (Percy::MetricsBuffer::MAX_TIMING_VALUES + 500).times do |i|
+        buffer.timing('capped_metric', i)
+      end
+
+      data = buffer.flush!
+      timer = data[:timers]['capped_metric']
+
+      # min/max/sum/count are always accurate regardless of cap
+      expect(timer[:count]).to eq(Percy::MetricsBuffer::MAX_TIMING_VALUES + 500)
+      expect(timer[:min]).to eq(0)
+      expect(timer[:max]).to eq(Percy::MetricsBuffer::MAX_TIMING_VALUES + 499)
+
+      # values array is capped
+      expect(timer[:values].length).to eq(Percy::MetricsBuffer::MAX_TIMING_VALUES)
     end
   end
 

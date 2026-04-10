@@ -70,6 +70,48 @@ RSpec.describe Percy::MetricsFlusher do
       expect(mock_event).to receive(:add_field).with('hub_methods_insert_job_min_ms', 3)
       expect(mock_event).to receive(:add_field).with('hub_methods_insert_job_max_ms', 100)
       expect(mock_event).to receive(:add_field).with('hub_methods_insert_job_call_count', 3)
+      expect(mock_event).to receive(:add_field).with('hub_methods_insert_job_p50_ms', 5)
+      expect(mock_event).to receive(:add_field).with('hub_methods_insert_job_p90_ms', 100)
+      expect(mock_event).to receive(:add_field).with('hub_methods_insert_job_p99_ms', 100)
+      expect(mock_event).to receive(:add_field).with('name', 'hub_metrics_batch')
+      expect(mock_event).to receive(:add_field).with('service_name', 'percy-hub')
+      expect(mock_event).to receive(:add_field).with('env', anything)
+      expect(mock_event).to receive(:send)
+
+      flusher.send(:flush_once)
+    end
+  end
+
+  describe 'percentile calculation' do
+    it 'computes correct percentiles with many values' do
+      # 100 values: 1, 2, 3, ..., 100
+      (1..100).each { |i| buffer.timing('hub.methods.test', i) }
+
+      expect(mock_event).to receive(:add_field).with('hub_methods_test_p50_ms', 50)
+      expect(mock_event).to receive(:add_field).with('hub_methods_test_p90_ms', 90)
+      expect(mock_event).to receive(:add_field).with('hub_methods_test_p99_ms', 99)
+      expect(mock_event).to receive(:add_field).with('hub_methods_test_avg_ms', 50.5)
+      expect(mock_event).to receive(:add_field).with('hub_methods_test_min_ms', 1)
+      expect(mock_event).to receive(:add_field).with('hub_methods_test_max_ms', 100)
+      expect(mock_event).to receive(:add_field).with('hub_methods_test_call_count', 100)
+      expect(mock_event).to receive(:add_field).with('name', 'hub_metrics_batch')
+      expect(mock_event).to receive(:add_field).with('service_name', 'percy-hub')
+      expect(mock_event).to receive(:add_field).with('env', anything)
+      expect(mock_event).to receive(:send)
+
+      flusher.send(:flush_once)
+    end
+
+    it 'handles single value' do
+      buffer.timing('hub.methods.single', 42)
+
+      expect(mock_event).to receive(:add_field).with('hub_methods_single_p50_ms', 42)
+      expect(mock_event).to receive(:add_field).with('hub_methods_single_p90_ms', 42)
+      expect(mock_event).to receive(:add_field).with('hub_methods_single_p99_ms', 42)
+      expect(mock_event).to receive(:add_field).with('hub_methods_single_avg_ms', 42.0)
+      expect(mock_event).to receive(:add_field).with('hub_methods_single_min_ms', 42)
+      expect(mock_event).to receive(:add_field).with('hub_methods_single_max_ms', 42)
+      expect(mock_event).to receive(:add_field).with('hub_methods_single_call_count', 1)
       expect(mock_event).to receive(:add_field).with('name', 'hub_metrics_batch')
       expect(mock_event).to receive(:add_field).with('service_name', 'percy-hub')
       expect(mock_event).to receive(:add_field).with('env', anything)

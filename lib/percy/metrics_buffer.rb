@@ -6,6 +6,12 @@ module Percy
       env:#{ENV.fetch('PERCY_ENV', 'development')}
     ].freeze
 
+    # Max timing values stored per metric per flush window.
+    # Prevents unbounded memory growth if flush thread dies or a code bug
+    # creates a tight loop. 1000 values = ~8KB per metric, enough for
+    # accurate p99 with 3-sec flush (~150 calls/sec typical max).
+    MAX_TIMING_VALUES = 1000
+
     attr_reader :default_tags
 
     def initialize(tags: DEFAULT_TAGS)
@@ -155,8 +161,12 @@ module Percy
         t[:max] = value if value > t[:max]
         t[:sum] += value
         t[:count] += 1
+        # Cap values array to prevent unbounded memory growth.
+        # min/max/sum/count are always accurate; percentiles use
+        # a reservoir sample when capped.
+        t[:values] << value if t[:values].length < MAX_TIMING_VALUES
       else
-        @timers[key] = { min: value, max: value, sum: value, count: 1 }
+        @timers[key] = { min: value, max: value, sum: value, count: 1, values: [value] }
       end
     end
   end

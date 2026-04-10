@@ -83,7 +83,7 @@ module Percy
       # Counters: for tagged metrics, SUM across all tag combos per base name
       aggregate_and_add_fields(event, data[:counters], :counter)
 
-      # Timers: expand to avg_ms/max_ms/min_ms/call_count
+      # Timers: expand to avg/min/max/p50/p90/p99/call_count
       data[:timers].each do |key, timer|
         base = key_to_field_name(key)
         avg = timer[:count] > 0 ? (timer[:sum].to_f / timer[:count]).round(2) : 0
@@ -91,6 +91,14 @@ module Percy
         event.add_field("#{base}_min_ms", timer[:min])
         event.add_field("#{base}_max_ms", timer[:max])
         event.add_field("#{base}_call_count", timer[:count])
+
+        # Percentiles from stored values
+        if timer[:values] && timer[:values].length > 0
+          sorted = timer[:values].sort
+          event.add_field("#{base}_p50_ms", percentile(sorted, 50))
+          event.add_field("#{base}_p90_ms", percentile(sorted, 90))
+          event.add_field("#{base}_p99_ms", percentile(sorted, 99))
+        end
       end
 
       event.send
@@ -148,6 +156,16 @@ module Percy
 
     def key_to_field_name(key)
       extract_base_name(key).tr('.', '_')
+    end
+
+    # Calculate percentile from a sorted array.
+    # Uses nearest-rank method: p-th percentile = value at ceil(p/100 * n) - 1
+    def percentile(sorted_values, p)
+      return sorted_values[0] if sorted_values.length == 1
+
+      rank = (p / 100.0 * sorted_values.length).ceil - 1
+      rank = [rank, 0].max
+      sorted_values[rank]
     end
 
     def log_error(message)
