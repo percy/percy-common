@@ -1,5 +1,5 @@
 # setup default base image
-BASE_IMAGE ?= ruby:3.3-alpine
+BASE_IMAGE ?= ruby:2.6-alpine
 
 build:
 	docker-compose build --build-arg BASE_IMAGE="$(BASE_IMAGE)"
