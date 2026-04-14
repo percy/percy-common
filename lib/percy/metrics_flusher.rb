@@ -37,7 +37,6 @@ module Percy
 
         @running = true
         @thread = Thread.new { flush_loop }
-        @thread.abort_on_exception = false
       end
       self
     end

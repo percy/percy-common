@@ -1,5 +1,3 @@
-require 'time'
-
 module Percy
   class MetricsBuffer
     DEFAULT_TAGS = %W[
