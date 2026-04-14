@@ -55,10 +55,6 @@ module Percy
       @mutex.synchronize { @running }
     end
 
-    def consecutive_failures
-      @consecutive_failures
-    end
-
     private
 
     def flush_loop

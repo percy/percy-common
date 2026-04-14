@@ -136,27 +136,45 @@ RSpec.describe Percy::MetricsFlusher do
       expect { flusher.send(:flush_once) }.not_to raise_error
     end
 
-    it 'tracks consecutive failures' do
+    it 'logs each failure below threshold' do
       allow(mock_event).to receive(:send).and_raise(StandardError, 'network error')
+
+      expect($stderr).to receive(:puts).with(/MetricsFlusher flush error/).exactly(3).times
 
       3.times do
         buffer.gauge('test', 1)
         flusher.send(:flush_once)
       end
-
-      expect(flusher.consecutive_failures).to eq(3)
     end
 
-    it 'resets failure count on success' do
+    it 'logs threshold message at exactly N failures' do
       allow(mock_event).to receive(:send).and_raise(StandardError, 'network error')
+
+      allow($stderr).to receive(:puts)
+      expect($stderr).to receive(:puts).with(/has failed 10 consecutive flushes/).once
+
+      10.times do
+        buffer.gauge('test', 1)
+        flusher.send(:flush_once)
+      end
+    end
+
+    it 'stops logging individual errors after success resets count' do
+      allow(mock_event).to receive(:send).and_raise(StandardError, 'network error')
+
+      expect($stderr).to receive(:puts).with(/MetricsFlusher flush error/).once
       buffer.gauge('test', 1)
       flusher.send(:flush_once)
-      expect(flusher.consecutive_failures).to eq(1)
 
       allow(mock_event).to receive(:send) # success
       buffer.gauge('test', 1)
       flusher.send(:flush_once)
-      expect(flusher.consecutive_failures).to eq(0)
+
+      # After reset, a new failure should log again (proves counter was reset)
+      allow(mock_event).to receive(:send).and_raise(StandardError, 'network error')
+      expect($stderr).to receive(:puts).with(/MetricsFlusher flush error/).once
+      buffer.gauge('test', 1)
+      flusher.send(:flush_once)
     end
 
     it 'continues flushing after background thread error' do
