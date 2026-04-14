@@ -116,17 +116,16 @@ module Percy
     end
 
     # Atomically flush all buffered data and reset.
-    # Returns { gauges: {}, counters: {}, timers: {} }
+    # Gauges persist across flushes (StatsD semantics), counters and timers reset.
     def flush!
       @mutex.synchronize do
         snapshot = {
           gauges: @gauges.dup,
-          counters: @counters.dup,
-          timers: @timers.dup,
+          counters: @counters,
+          timers: @timers,
         }
-        @gauges.clear
-        @counters.clear
-        @timers.clear
+        @counters = {}
+        @timers = {}
         snapshot
       end
     end
@@ -160,10 +159,13 @@ module Percy
         t[:max] = value if value > t[:max]
         t[:sum] += value
         t[:count] += 1
-        # Cap values array to prevent unbounded memory growth.
-        # min/max/sum/count are always accurate; percentiles use
-        # a reservoir sample when capped.
-        t[:values] << value if t[:values].length < MAX_TIMING_VALUES
+        if t[:values].length < MAX_TIMING_VALUES
+          t[:values] << value
+        else
+          # Algorithm R reservoir sampling — every value has equal probability
+          j = rand(t[:count])
+          t[:values][j] = value if j < MAX_TIMING_VALUES
+        end
       else
         @timers[key] = { min: value, max: value, sum: value, count: 1, values: [value] }
       end

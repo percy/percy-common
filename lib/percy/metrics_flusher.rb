@@ -9,6 +9,7 @@ module Percy
     attr_reader :flush_interval
 
     FAILURE_LOG_THRESHOLD = 10
+    MAX_TAG_FIELDS = 100
 
     def initialize(
       buffer:,
@@ -62,56 +63,27 @@ module Percy
         flush_once
       end
     rescue StandardError => e
-      log_error("MetricsFlusher thread died unexpectedly: #{e.class}: #{e.message}")
+      log_error("MetricsFlusher thread died: #{e.class}: #{e.message}, restarting in #{@flush_interval}s")
+      sleep(@flush_interval)
+      retry if @mutex.synchronize { @running }
     ensure
       @mutex.synchronize { @running = false }
     end
 
     def flush_once
+      event = nil
       @flush_mutex.synchronize do
         data = @buffer.flush!
 
-        # Skip if nothing to send
         return if data[:gauges].empty? && data[:counters].empty? && data[:timers].empty?
 
-        event = @honeycomb_client.event
-        event.add_field('name', @event_name)
-        event.add_field('service_name', @service_name)
-
-        # Add default tags as fields
-        @buffer.default_tags.each do |tag|
-          key, value = tag.split(':', 2)
-          event.add_field(key, value)
-        end
-
-        # Gauges: for tagged metrics, aggregate by base name (last value wins per base)
-        # and preserve unique tag combos as separate fields
-        aggregate_and_add_fields(event, data[:gauges], :gauge)
-
-        # Counters: for tagged metrics, SUM across all tag combos per base name
-        aggregate_and_add_fields(event, data[:counters], :counter)
-
-        # Timers: expand to avg/min/max/p50/p90/p99/call_count
-        data[:timers].each do |key, timer|
-          base = key_to_field_name(key)
-          avg = timer[:count] > 0 ? (timer[:sum].to_f / timer[:count]).round(2) : 0
-          event.add_field("#{base}_avg_ms", avg)
-          event.add_field("#{base}_min_ms", timer[:min])
-          event.add_field("#{base}_max_ms", timer[:max])
-          event.add_field("#{base}_call_count", timer[:count])
-
-          # Percentiles from stored values
-          if timer[:values] && timer[:values].length > 0
-            sorted = timer[:values].sort
-            event.add_field("#{base}_p50_ms", percentile(sorted, 50))
-            event.add_field("#{base}_p90_ms", percentile(sorted, 90))
-            event.add_field("#{base}_p99_ms", percentile(sorted, 99))
-          end
-        end
-
-        event.send
-        @consecutive_failures = 0
+        event = build_event(data)
       end
+
+      return unless event
+
+      event.send
+      @consecutive_failures = 0
     rescue StandardError => e
       @consecutive_failures += 1
       if @consecutive_failures == FAILURE_LOG_THRESHOLD
@@ -119,10 +91,41 @@ module Percy
       elsif @consecutive_failures < FAILURE_LOG_THRESHOLD
         log_error("MetricsFlusher flush error: #{e.message}")
       end
-      # Above threshold: log only every 100 failures to avoid log spam
       if @consecutive_failures > FAILURE_LOG_THRESHOLD && (@consecutive_failures % 100).zero?
         log_error("MetricsFlusher still failing (#{@consecutive_failures} consecutive): #{e.message}")
       end
+    end
+
+    def build_event(data)
+      event = @honeycomb_client.event
+      event.add_field('name', @event_name)
+      event.add_field('service_name', @service_name)
+
+      @buffer.default_tags.each do |tag|
+        key, value = tag.split(':', 2)
+        event.add_field(key, value)
+      end
+
+      aggregate_and_add_fields(event, data[:gauges], :gauge)
+      aggregate_and_add_fields(event, data[:counters], :counter)
+
+      data[:timers].each do |key, timer|
+        base = key_to_field_name(key)
+        avg = timer[:count] > 0 ? (timer[:sum].to_f / timer[:count]).round(2) : 0
+        event.add_field("#{base}_avg_ms", avg)
+        event.add_field("#{base}_min_ms", timer[:min])
+        event.add_field("#{base}_max_ms", timer[:max])
+        event.add_field("#{base}_call_count", timer[:count])
+
+        if timer[:values] && timer[:values].length > 0
+          sorted = timer[:values].sort
+          event.add_field("#{base}_p50_ms", percentile(sorted, 50))
+          event.add_field("#{base}_p90_ms", percentile(sorted, 90))
+          event.add_field("#{base}_p99_ms", percentile(sorted, 99))
+        end
+      end
+
+      event
     end
 
     # Aggregate tagged metrics by base name.
@@ -130,11 +133,16 @@ module Percy
     # For gauges: use last value (hash iteration order).
     # Also emit per-tag fields when tags exist.
     def aggregate_and_add_fields(event, hash, type)
-      # Group by base metric name (without tags)
       grouped = {}
       hash.each do |key, value|
-        base = extract_base_name(key)
-        tag = extract_tag(key)
+        key_str = key.to_s
+        if key_str.include?('[')
+          base = extract_base_name(key_str)
+          tag = extract_tag(key_str)
+        else
+          base = key_str
+          tag = nil
+        end
 
         grouped[base] ||= { total: 0, tagged: {} }
 
@@ -144,22 +152,22 @@ module Percy
           grouped[base][:total] = value
         end
 
-        if tag
-          grouped[base][:tagged][tag] = value
-        end
+        grouped[base][:tagged][tag] = value if tag
       end
 
       grouped.each do |base, data|
         field_base = base.tr('.', '_')
         suffix = type == :counter ? '_count' : ''
 
-        # Always emit the aggregated total
         event.add_field("#{field_base}#{suffix}", data[:total])
 
-        # Also emit per-tag breakdown if there are tagged values
-        data[:tagged].each do |tag, value|
-          safe_tag = tag.tr(':', '_').tr(',', '_').tr('.', '_')
-          event.add_field("#{field_base}_#{safe_tag}#{suffix}", value)
+        if data[:tagged].size <= MAX_TAG_FIELDS
+          data[:tagged].each do |tag, value|
+            safe_tag = tag.tr(':', '_').tr(',', '_').tr('.', '_')
+            event.add_field("#{field_base}_#{safe_tag}#{suffix}", value)
+          end
+        else
+          log_error("Skipping per-tag breakdown for #{base}: #{data[:tagged].size} unique tags exceeds cap")
         end
       end
     end

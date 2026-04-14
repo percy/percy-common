@@ -184,7 +184,7 @@ RSpec.describe Percy::MetricsBuffer do
   end
 
   describe '#flush!' do
-    it 'returns all data and resets buffer' do
+    it 'returns all data and resets counters/timers but persists gauges' do
       buffer.gauge('idle', 8)
       buffer.increment('heartbeat')
       buffer.timing('insert_job', 5)
@@ -194,9 +194,8 @@ RSpec.describe Percy::MetricsBuffer do
       expect(data[:counters]).to eq({ 'heartbeat' => 1 })
       expect(data[:timers]['insert_job'][:sum]).to eq(5)
 
-      # Buffer is now empty
       data2 = buffer.flush!
-      expect(data2[:gauges]).to be_empty
+      expect(data2[:gauges]).to eq({ 'idle' => 8 })
       expect(data2[:counters]).to be_empty
       expect(data2[:timers]).to be_empty
     end
