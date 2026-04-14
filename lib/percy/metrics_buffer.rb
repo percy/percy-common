@@ -32,7 +32,7 @@ module Percy
     # Increment a counter metric.
     # Same signature as Datadog::Statsd#increment
     def increment(stat, opts = {})
-      by = opts.delete(:by) || 1
+      by = opts[:by] || 1
       key = build_key(stat, opts)
       @mutex.synchronize { @counters[key] = (@counters[key] || 0) + by }
     end

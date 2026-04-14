@@ -135,6 +135,47 @@ RSpec.describe Percy::MetricsFlusher do
 
       expect { flusher.send(:flush_once) }.not_to raise_error
     end
+
+    it 'tracks consecutive failures' do
+      allow(mock_event).to receive(:send).and_raise(StandardError, 'network error')
+
+      3.times do
+        buffer.gauge('test', 1)
+        flusher.send(:flush_once)
+      end
+
+      expect(flusher.consecutive_failures).to eq(3)
+    end
+
+    it 'resets failure count on success' do
+      allow(mock_event).to receive(:send).and_raise(StandardError, 'network error')
+      buffer.gauge('test', 1)
+      flusher.send(:flush_once)
+      expect(flusher.consecutive_failures).to eq(1)
+
+      allow(mock_event).to receive(:send) # success
+      buffer.gauge('test', 1)
+      flusher.send(:flush_once)
+      expect(flusher.consecutive_failures).to eq(0)
+    end
+
+    it 'continues flushing after background thread error' do
+      call_count = 0
+      allow(mock_event).to receive(:send) do
+        call_count += 1
+        raise StandardError, 'transient error' if call_count == 1
+      end
+
+      flusher.start!
+      buffer.gauge('test', 1)
+      sleep(0.25) # wait for at least 2 flush cycles
+
+      buffer.gauge('test', 2)
+      sleep(0.15)
+
+      flusher.stop!
+      expect(call_count).to be >= 2 # continued after error
+    end
   end
 
   describe 'stop! does final flush' do

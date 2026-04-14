@@ -8,6 +8,8 @@ module Percy
 
     attr_reader :flush_interval
 
+    FAILURE_LOG_THRESHOLD = 10
+
     def initialize(
       buffer:,
       honeycomb_client:,
@@ -25,6 +27,8 @@ module Percy
       @running = false
       @thread = nil
       @mutex = Mutex.new
+      @flush_mutex = Mutex.new
+      @consecutive_failures = 0
     end
 
     def start!
@@ -40,13 +44,19 @@ module Percy
 
     def stop!
       @mutex.synchronize { @running = false }
-      @thread&.join(@flush_interval + 2)
-      flush_once # final flush
+      thread_exited = @thread&.join(@flush_interval + 2)
+      # Only do a final flush if the thread actually exited (join didn't timeout),
+      # otherwise the thread may still be mid-flush.
+      flush_once if thread_exited || @thread.nil?
       self
     end
 
     def running?
       @mutex.synchronize { @running }
+    end
+
+    def consecutive_failures
+      @consecutive_failures
     end
 
     private
@@ -56,54 +66,68 @@ module Percy
         sleep(@flush_interval)
         flush_once
       end
+    rescue StandardError => e
+      log_error("MetricsFlusher thread died unexpectedly: #{e.class}: #{e.message}")
     ensure
       @mutex.synchronize { @running = false }
     end
 
     def flush_once
-      data = @buffer.flush!
+      @flush_mutex.synchronize do
+        data = @buffer.flush!
 
-      # Skip if nothing to send
-      return if data[:gauges].empty? && data[:counters].empty? && data[:timers].empty?
+        # Skip if nothing to send
+        return if data[:gauges].empty? && data[:counters].empty? && data[:timers].empty?
 
-      event = @honeycomb_client.event
-      event.add_field('name', @event_name)
-      event.add_field('service_name', @service_name)
+        event = @honeycomb_client.event
+        event.add_field('name', @event_name)
+        event.add_field('service_name', @service_name)
 
-      # Add default tags as fields
-      @buffer.default_tags.each do |tag|
-        key, value = tag.split(':', 2)
-        event.add_field(key, value)
-      end
-
-      # Gauges: for tagged metrics, aggregate by base name (last value wins per base)
-      # and preserve unique tag combos as separate fields
-      aggregate_and_add_fields(event, data[:gauges], :gauge)
-
-      # Counters: for tagged metrics, SUM across all tag combos per base name
-      aggregate_and_add_fields(event, data[:counters], :counter)
-
-      # Timers: expand to avg/min/max/p50/p90/p99/call_count
-      data[:timers].each do |key, timer|
-        base = key_to_field_name(key)
-        avg = timer[:count] > 0 ? (timer[:sum].to_f / timer[:count]).round(2) : 0
-        event.add_field("#{base}_avg_ms", avg)
-        event.add_field("#{base}_min_ms", timer[:min])
-        event.add_field("#{base}_max_ms", timer[:max])
-        event.add_field("#{base}_call_count", timer[:count])
-
-        # Percentiles from stored values
-        if timer[:values] && timer[:values].length > 0
-          sorted = timer[:values].sort
-          event.add_field("#{base}_p50_ms", percentile(sorted, 50))
-          event.add_field("#{base}_p90_ms", percentile(sorted, 90))
-          event.add_field("#{base}_p99_ms", percentile(sorted, 99))
+        # Add default tags as fields
+        @buffer.default_tags.each do |tag|
+          key, value = tag.split(':', 2)
+          event.add_field(key, value)
         end
-      end
 
-      event.send
+        # Gauges: for tagged metrics, aggregate by base name (last value wins per base)
+        # and preserve unique tag combos as separate fields
+        aggregate_and_add_fields(event, data[:gauges], :gauge)
+
+        # Counters: for tagged metrics, SUM across all tag combos per base name
+        aggregate_and_add_fields(event, data[:counters], :counter)
+
+        # Timers: expand to avg/min/max/p50/p90/p99/call_count
+        data[:timers].each do |key, timer|
+          base = key_to_field_name(key)
+          avg = timer[:count] > 0 ? (timer[:sum].to_f / timer[:count]).round(2) : 0
+          event.add_field("#{base}_avg_ms", avg)
+          event.add_field("#{base}_min_ms", timer[:min])
+          event.add_field("#{base}_max_ms", timer[:max])
+          event.add_field("#{base}_call_count", timer[:count])
+
+          # Percentiles from stored values
+          if timer[:values] && timer[:values].length > 0
+            sorted = timer[:values].sort
+            event.add_field("#{base}_p50_ms", percentile(sorted, 50))
+            event.add_field("#{base}_p90_ms", percentile(sorted, 90))
+            event.add_field("#{base}_p99_ms", percentile(sorted, 99))
+          end
+        end
+
+        event.send
+        @consecutive_failures = 0
+      end
     rescue StandardError => e
-      log_error("MetricsFlusher flush error: #{e.message}")
+      @consecutive_failures += 1
+      if @consecutive_failures == FAILURE_LOG_THRESHOLD
+        log_error("MetricsFlusher has failed #{FAILURE_LOG_THRESHOLD} consecutive flushes: #{e.message}")
+      elsif @consecutive_failures < FAILURE_LOG_THRESHOLD
+        log_error("MetricsFlusher flush error: #{e.message}")
+      end
+      # Above threshold: log only every 100 failures to avoid log spam
+      if @consecutive_failures > FAILURE_LOG_THRESHOLD && (@consecutive_failures % 100).zero?
+        log_error("MetricsFlusher still failing (#{@consecutive_failures} consecutive): #{e.message}")
+      end
     end
 
     # Aggregate tagged metrics by base name.
