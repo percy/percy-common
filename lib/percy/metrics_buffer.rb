@@ -46,17 +46,18 @@ module Percy
 
     # Time a block and record the duration.
     # Same signature as Datadog::Statsd#time — returns the block's return value.
+    # Uses ensure so timing is recorded even when the block uses `return`
+    # (which exits the enclosing method, skipping code after yield).
     def time(stat, opts = {})
       start = now
-      result = yield
+      yield
+    ensure
       duration_ms = ((now - start) * 1000).round
 
       key = build_key(stat, opts)
       @mutex.synchronize do
         record_timing(key, duration_ms)
       end
-
-      result
     end
 
     # Record a histogram value.
