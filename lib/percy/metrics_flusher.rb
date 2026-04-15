@@ -112,16 +112,16 @@ module Percy
       data[:timers].each do |key, timer|
         base = key_to_field_name(key)
         avg = timer[:count] > 0 ? (timer[:sum].to_f / timer[:count]).round(2) : 0
-        event.add_field("#{base}_avg_ms", avg)
-        event.add_field("#{base}_min_ms", timer[:min])
-        event.add_field("#{base}_max_ms", timer[:max])
-        event.add_field("#{base}_call_count", timer[:count])
+        event.add_field("#{base}.avg_ms", avg)
+        event.add_field("#{base}.min_ms", timer[:min])
+        event.add_field("#{base}.max_ms", timer[:max])
+        event.add_field("#{base}.call_count", timer[:count])
 
         if timer[:values] && timer[:values].length > 0
           sorted = timer[:values].sort
-          event.add_field("#{base}_p50_ms", percentile(sorted, 50))
-          event.add_field("#{base}_p90_ms", percentile(sorted, 90))
-          event.add_field("#{base}_p99_ms", percentile(sorted, 99))
+          event.add_field("#{base}.p50_ms", percentile(sorted, 50))
+          event.add_field("#{base}.p90_ms", percentile(sorted, 90))
+          event.add_field("#{base}.p99_ms", percentile(sorted, 99))
         end
       end
 
@@ -156,15 +156,14 @@ module Percy
       end
 
       grouped.each do |base, data|
-        field_base = base.tr('.', '_')
-        suffix = type == :counter ? '_count' : ''
+        suffix = type == :counter ? '.count' : ''
 
-        event.add_field("#{field_base}#{suffix}", data[:total])
+        event.add_field("#{base}#{suffix}", data[:total])
 
         if data[:tagged].size <= MAX_TAG_FIELDS
           data[:tagged].each do |tag, value|
-            safe_tag = tag.tr(':', '_').tr(',', '_').tr('.', '_')
-            event.add_field("#{field_base}_#{safe_tag}#{suffix}", value)
+            safe_tag = tag.tr(':', '.').tr(',', '.')
+            event.add_field("#{base}.#{safe_tag}#{suffix}", value)
           end
         else
           log_error("Skipping per-tag breakdown for #{base}: #{data[:tagged].size} unique tags exceeds cap")
@@ -182,7 +181,7 @@ module Percy
     end
 
     def key_to_field_name(key)
-      extract_base_name(key).tr('.', '_')
+      extract_base_name(key)
     end
 
     # Calculate percentile from a sorted array.

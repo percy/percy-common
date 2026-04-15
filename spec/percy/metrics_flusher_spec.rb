@@ -34,8 +34,8 @@ RSpec.describe Percy::MetricsFlusher do
       buffer.gauge('hub.workers.idle', 8)
       buffer.gauge('hub.workers.online', 2500)
 
-      expect(mock_event).to receive(:add_field).with('hub_workers_idle', 8)
-      expect(mock_event).to receive(:add_field).with('hub_workers_online', 2500)
+      expect(mock_event).to receive(:add_field).with('hub.workers.idle', 8)
+      expect(mock_event).to receive(:add_field).with('hub.workers.online', 2500)
       expect(mock_event).to receive(:add_field).with('name', 'hub_metrics_batch')
       expect(mock_event).to receive(:add_field).with('service_name', 'percy-hub')
       expect(mock_event).to receive(:add_field).with('env', anything)
@@ -50,7 +50,7 @@ RSpec.describe Percy::MetricsFlusher do
       buffer.increment('hub.workers.heartbeat')
       buffer.increment('hub.workers.heartbeat')
 
-      expect(mock_event).to receive(:add_field).with('hub_workers_heartbeat_count', 2)
+      expect(mock_event).to receive(:add_field).with('hub.workers.heartbeat.count', 2)
       expect(mock_event).to receive(:add_field).with('name', 'hub_metrics_batch')
       expect(mock_event).to receive(:add_field).with('service_name', 'percy-hub')
       expect(mock_event).to receive(:add_field).with('env', anything)
@@ -66,13 +66,13 @@ RSpec.describe Percy::MetricsFlusher do
       buffer.timing('hub.methods.insert_job', 100)
       buffer.timing('hub.methods.insert_job', 3)
 
-      expect(mock_event).to receive(:add_field).with('hub_methods_insert_job_avg_ms', 36.0)
-      expect(mock_event).to receive(:add_field).with('hub_methods_insert_job_min_ms', 3)
-      expect(mock_event).to receive(:add_field).with('hub_methods_insert_job_max_ms', 100)
-      expect(mock_event).to receive(:add_field).with('hub_methods_insert_job_call_count', 3)
-      expect(mock_event).to receive(:add_field).with('hub_methods_insert_job_p50_ms', 5)
-      expect(mock_event).to receive(:add_field).with('hub_methods_insert_job_p90_ms', 100)
-      expect(mock_event).to receive(:add_field).with('hub_methods_insert_job_p99_ms', 100)
+      expect(mock_event).to receive(:add_field).with('hub.methods.insert_job.avg_ms', 36.0)
+      expect(mock_event).to receive(:add_field).with('hub.methods.insert_job.min_ms', 3)
+      expect(mock_event).to receive(:add_field).with('hub.methods.insert_job.max_ms', 100)
+      expect(mock_event).to receive(:add_field).with('hub.methods.insert_job.call_count', 3)
+      expect(mock_event).to receive(:add_field).with('hub.methods.insert_job.p50_ms', 5)
+      expect(mock_event).to receive(:add_field).with('hub.methods.insert_job.p90_ms', 100)
+      expect(mock_event).to receive(:add_field).with('hub.methods.insert_job.p99_ms', 100)
       expect(mock_event).to receive(:add_field).with('name', 'hub_metrics_batch')
       expect(mock_event).to receive(:add_field).with('service_name', 'percy-hub')
       expect(mock_event).to receive(:add_field).with('env', anything)
@@ -87,13 +87,13 @@ RSpec.describe Percy::MetricsFlusher do
       # 100 values: 1, 2, 3, ..., 100
       (1..100).each { |i| buffer.timing('hub.methods.test', i) }
 
-      expect(mock_event).to receive(:add_field).with('hub_methods_test_p50_ms', 50)
-      expect(mock_event).to receive(:add_field).with('hub_methods_test_p90_ms', 90)
-      expect(mock_event).to receive(:add_field).with('hub_methods_test_p99_ms', 99)
-      expect(mock_event).to receive(:add_field).with('hub_methods_test_avg_ms', 50.5)
-      expect(mock_event).to receive(:add_field).with('hub_methods_test_min_ms', 1)
-      expect(mock_event).to receive(:add_field).with('hub_methods_test_max_ms', 100)
-      expect(mock_event).to receive(:add_field).with('hub_methods_test_call_count', 100)
+      expect(mock_event).to receive(:add_field).with('hub.methods.test.p50_ms', 50)
+      expect(mock_event).to receive(:add_field).with('hub.methods.test.p90_ms', 90)
+      expect(mock_event).to receive(:add_field).with('hub.methods.test.p99_ms', 99)
+      expect(mock_event).to receive(:add_field).with('hub.methods.test.avg_ms', 50.5)
+      expect(mock_event).to receive(:add_field).with('hub.methods.test.min_ms', 1)
+      expect(mock_event).to receive(:add_field).with('hub.methods.test.max_ms', 100)
+      expect(mock_event).to receive(:add_field).with('hub.methods.test.call_count', 100)
       expect(mock_event).to receive(:add_field).with('name', 'hub_metrics_batch')
       expect(mock_event).to receive(:add_field).with('service_name', 'percy-hub')
       expect(mock_event).to receive(:add_field).with('env', anything)
@@ -105,13 +105,13 @@ RSpec.describe Percy::MetricsFlusher do
     it 'handles single value' do
       buffer.timing('hub.methods.single', 42)
 
-      expect(mock_event).to receive(:add_field).with('hub_methods_single_p50_ms', 42)
-      expect(mock_event).to receive(:add_field).with('hub_methods_single_p90_ms', 42)
-      expect(mock_event).to receive(:add_field).with('hub_methods_single_p99_ms', 42)
-      expect(mock_event).to receive(:add_field).with('hub_methods_single_avg_ms', 42.0)
-      expect(mock_event).to receive(:add_field).with('hub_methods_single_min_ms', 42)
-      expect(mock_event).to receive(:add_field).with('hub_methods_single_max_ms', 42)
-      expect(mock_event).to receive(:add_field).with('hub_methods_single_call_count', 1)
+      expect(mock_event).to receive(:add_field).with('hub.methods.single.p50_ms', 42)
+      expect(mock_event).to receive(:add_field).with('hub.methods.single.p90_ms', 42)
+      expect(mock_event).to receive(:add_field).with('hub.methods.single.p99_ms', 42)
+      expect(mock_event).to receive(:add_field).with('hub.methods.single.avg_ms', 42.0)
+      expect(mock_event).to receive(:add_field).with('hub.methods.single.min_ms', 42)
+      expect(mock_event).to receive(:add_field).with('hub.methods.single.max_ms', 42)
+      expect(mock_event).to receive(:add_field).with('hub.methods.single.call_count', 1)
       expect(mock_event).to receive(:add_field).with('name', 'hub_metrics_batch')
       expect(mock_event).to receive(:add_field).with('service_name', 'percy-hub')
       expect(mock_event).to receive(:add_field).with('env', anything)
@@ -200,7 +200,7 @@ RSpec.describe Percy::MetricsFlusher do
     it 'flushes remaining data on stop' do
       buffer.gauge('hub.workers.idle', 42)
 
-      expect(mock_event).to receive(:add_field).with('hub_workers_idle', 42)
+      expect(mock_event).to receive(:add_field).with('hub.workers.idle', 42)
       expect(mock_event).to receive(:add_field).with('name', 'hub_metrics_batch')
       expect(mock_event).to receive(:add_field).with('service_name', 'percy-hub')
       expect(mock_event).to receive(:add_field).with('env', anything)
@@ -217,9 +217,9 @@ RSpec.describe Percy::MetricsFlusher do
       buffer.increment('hub.skipped', tags: ['org:123'])
       buffer.increment('hub.skipped', tags: ['org:456'])
 
-      expect(mock_event).to receive(:add_field).with('hub_skipped_count', 3) # total sum
-      expect(mock_event).to receive(:add_field).with('hub_skipped_org_123_count', 2) # per-tag
-      expect(mock_event).to receive(:add_field).with('hub_skipped_org_456_count', 1) # per-tag
+      expect(mock_event).to receive(:add_field).with('hub.skipped.count', 3) # total sum
+      expect(mock_event).to receive(:add_field).with('hub.skipped.org.123.count', 2) # per-tag
+      expect(mock_event).to receive(:add_field).with('hub.skipped.org.456.count', 1) # per-tag
       expect(mock_event).to receive(:add_field).with('name', 'hub_metrics_batch')
       expect(mock_event).to receive(:add_field).with('service_name', 'percy-hub')
       expect(mock_event).to receive(:add_field).with('env', anything)
@@ -232,9 +232,9 @@ RSpec.describe Percy::MetricsFlusher do
       buffer.gauge('hub.queue_size', 5, tags: ['sub:123'])
       buffer.gauge('hub.queue_size', 3, tags: ['sub:456'])
 
-      expect(mock_event).to receive(:add_field).with('hub_queue_size', 3) # last value
-      expect(mock_event).to receive(:add_field).with('hub_queue_size_sub_123', 5) # per-tag
-      expect(mock_event).to receive(:add_field).with('hub_queue_size_sub_456', 3) # per-tag
+      expect(mock_event).to receive(:add_field).with('hub.queue_size', 3) # last value
+      expect(mock_event).to receive(:add_field).with('hub.queue_size.sub.123', 5) # per-tag
+      expect(mock_event).to receive(:add_field).with('hub.queue_size.sub.456', 3) # per-tag
       expect(mock_event).to receive(:add_field).with('name', 'hub_metrics_batch')
       expect(mock_event).to receive(:add_field).with('service_name', 'percy-hub')
       expect(mock_event).to receive(:add_field).with('env', anything)
