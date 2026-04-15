@@ -55,22 +55,21 @@ module Percy
       @mutex.synchronize { @running }
     end
 
-    private
-
-    def flush_loop
+    private def flush_loop
       while @mutex.synchronize { @running }
         sleep(@flush_interval)
         flush_once
       end
     rescue StandardError => e
-      log_error("MetricsFlusher thread died: #{e.class}: #{e.message}, restarting in #{@flush_interval}s")
+      log_error("MetricsFlusher thread died: #{e.class}: #{e.message}, " \
+                "restarting in #{@flush_interval}s")
       sleep(@flush_interval)
       retry if @mutex.synchronize { @running }
     ensure
       @mutex.synchronize { @running = false }
     end
 
-    def flush_once
+    private def flush_once
       event = nil
       @flush_mutex.synchronize do
         data = @buffer.flush!
@@ -87,16 +86,18 @@ module Percy
     rescue StandardError => e
       @consecutive_failures += 1
       if @consecutive_failures == FAILURE_LOG_THRESHOLD
-        log_error("MetricsFlusher has failed #{FAILURE_LOG_THRESHOLD} consecutive flushes: #{e.message}")
+        log_error("MetricsFlusher has failed #{FAILURE_LOG_THRESHOLD} " \
+                  "consecutive flushes: #{e.message}")
       elsif @consecutive_failures < FAILURE_LOG_THRESHOLD
         log_error("MetricsFlusher flush error: #{e.message}")
       end
-      if @consecutive_failures > FAILURE_LOG_THRESHOLD && (@consecutive_failures % 100).zero?
-        log_error("MetricsFlusher still failing (#{@consecutive_failures} consecutive): #{e.message}")
+      if @consecutive_failures > FAILURE_LOG_THRESHOLD && (@consecutive_failures % 100) == 0
+        log_error('MetricsFlusher still failing ' \
+                  "(#{@consecutive_failures} consecutive): #{e.message}")
       end
     end
 
-    def build_event(data)
+    private def build_event(data)
       event = @honeycomb_client.event
       event.add_field('name', @event_name)
       event.add_field('service_name', @service_name)
@@ -117,12 +118,12 @@ module Percy
         event.add_field("#{base}.max_ms", timer[:max])
         event.add_field("#{base}.call_count", timer[:count])
 
-        if timer[:values] && timer[:values].length > 0
-          sorted = timer[:values].sort
-          event.add_field("#{base}.p50_ms", percentile(sorted, 50))
-          event.add_field("#{base}.p90_ms", percentile(sorted, 90))
-          event.add_field("#{base}.p99_ms", percentile(sorted, 99))
-        end
+        next unless timer[:values] && !timer[:values].empty?
+
+        sorted = timer[:values].sort
+        event.add_field("#{base}.p50_ms", percentile(sorted, 50))
+        event.add_field("#{base}.p90_ms", percentile(sorted, 90))
+        event.add_field("#{base}.p99_ms", percentile(sorted, 99))
       end
 
       event
@@ -132,7 +133,7 @@ module Percy
     # For counters: sum all tag combos into one total.
     # For gauges: use last value (hash iteration order).
     # Also emit per-tag fields when tags exist.
-    def aggregate_and_add_fields(event, hash, type)
+    private def aggregate_and_add_fields(event, hash, type)
       grouped = {}
       hash.each do |key, value|
         key_str = key.to_s
@@ -144,7 +145,7 @@ module Percy
           tag = nil
         end
 
-        grouped[base] ||= { total: 0, tagged: {} }
+        grouped[base] ||= {total: 0, tagged: {}}
 
         if type == :counter
           grouped[base][:total] += value
@@ -166,27 +167,28 @@ module Percy
             event.add_field("#{base}.#{safe_tag}#{suffix}", value)
           end
         else
-          log_error("Skipping per-tag breakdown for #{base}: #{data[:tagged].size} unique tags exceeds cap")
+          log_error("Skipping per-tag breakdown for #{base}: " \
+                    "#{data[:tagged].size} unique tags exceeds cap")
         end
       end
     end
 
-    def extract_base_name(key)
+    private def extract_base_name(key)
       key.to_s.sub(/\[.*\]/, '')
     end
 
-    def extract_tag(key)
+    private def extract_tag(key)
       match = key.to_s.match(/\[(.+)\]/)
       match ? match[1] : nil
     end
 
-    def key_to_field_name(key)
+    private def key_to_field_name(key)
       extract_base_name(key)
     end
 
     # Calculate percentile from a sorted array.
     # Uses nearest-rank method: p-th percentile = value at ceil(p/100 * n) - 1
-    def percentile(sorted_values, p)
+    private def percentile(sorted_values, p)
       return sorted_values[0] if sorted_values.length == 1
 
       rank = (p / 100.0 * sorted_values.length).ceil - 1
@@ -194,11 +196,11 @@ module Percy
       sorted_values[rank]
     end
 
-    def log_error(message)
+    private def log_error(message)
       if @logger
         @logger.error(message)
       else
-        $stderr.puts(message)
+        warn(message)
       end
     end
   end

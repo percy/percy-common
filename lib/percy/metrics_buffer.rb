@@ -43,7 +43,7 @@ module Percy
     end
 
     # Time a block and record the duration.
-    # Same signature as Datadog::Statsd#time — returns the block's return value.
+    # Same signature as Datadog::Statsd#time -- returns the block's return value.
     # Uses ensure so timing is recorded even when the block uses `return`
     # (which exits the enclosing method, skipping code after yield).
     def time(stat, opts = {})
@@ -130,13 +130,11 @@ module Percy
       end
     end
 
-    private
-
-    def now
+    private def now
       Process.clock_gettime(Process::CLOCK_MONOTONIC)
     end
 
-    def build_key(stat, opts = {})
+    private def build_key(stat, opts = {})
       tags = opts[:tags]
       if tags && !tags.empty?
         # Normalize Hash tags to key:value strings
@@ -152,7 +150,7 @@ module Percy
       end
     end
 
-    def record_timing(key, value)
+    private def record_timing(key, value)
       if @timers[key]
         t = @timers[key]
         t[:min] = value if value < t[:min]
@@ -162,12 +160,12 @@ module Percy
         if t[:values].length < MAX_TIMING_VALUES
           t[:values] << value
         else
-          # Algorithm R reservoir sampling — every value has equal probability
+          # Algorithm R reservoir sampling -- every value has equal probability
           j = rand(t[:count])
           t[:values][j] = value if j < MAX_TIMING_VALUES
         end
       else
-        @timers[key] = { min: value, max: value, sum: value, count: 1, values: [value] }
+        @timers[key] = {min: value, max: value, sum: value, count: 1, values: [value]}
       end
     end
   end

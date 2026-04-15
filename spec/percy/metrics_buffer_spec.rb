@@ -74,7 +74,7 @@ RSpec.describe Percy::MetricsBuffer do
       buffer.time('insert_job') { sleep(0.01) }
       data = buffer.flush!
       timer = data[:timers]['insert_job']
-      expect(timer).not_to be_nil
+      expect(timer).to_not be_nil
       expect(timer[:count]).to eq(1)
       expect(timer[:min]).to be >= 10 # at least 10ms
       expect(timer[:max]).to be >= 10
@@ -190,12 +190,12 @@ RSpec.describe Percy::MetricsBuffer do
       buffer.timing('insert_job', 5)
 
       data = buffer.flush!
-      expect(data[:gauges]).to eq({ 'idle' => 8 })
-      expect(data[:counters]).to eq({ 'heartbeat' => 1 })
+      expect(data[:gauges]).to eq({'idle' => 8})
+      expect(data[:counters]).to eq({'heartbeat' => 1})
       expect(data[:timers]['insert_job'][:sum]).to eq(5)
 
       data2 = buffer.flush!
-      expect(data2[:gauges]).to eq({ 'idle' => 8 })
+      expect(data2[:gauges]).to eq({'idle' => 8})
       expect(data2[:counters]).to be_empty
       expect(data2[:timers]).to be_empty
     end
