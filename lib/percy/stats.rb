@@ -44,7 +44,7 @@ module Percy
       # Programmer mistake, so raise an error.
       raise 'no timing started' unless @_timing_start
 
-      time_since_monotonic(stat, @_timing_start, options)
+      time_since_monotonic(stat, @_timing_start, **options)
       @_timing_start = nil
       true
     end
