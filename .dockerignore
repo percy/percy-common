@@ -1,0 +1,12 @@
+# Keep non-runtime files out of the build context so they cannot be copied into
+# image layers by `ADD . /app/src`. NOTE: spec/ is intentionally NOT excluded —
+# `make test` runs `bundle exec rspec` inside the container and needs it
+# (including the SSL fixtures under spec/support/ssl/).
+.git/
+.github/
+.buildkite/
+.gitignore
+.rubocop.yml
+README.md
+*.env
+.env.*
