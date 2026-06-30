@@ -16,7 +16,7 @@ Gem::Specification.new do |spec|
     f.match(/^(test|spec|features)\//)
   end
 
-  spec.required_ruby_version = '>= 2.6'
+  spec.required_ruby_version = '>= 3.1'
   spec.require_paths = ['lib']
 
   spec.add_dependency 'dogstatsd-ruby', '>= 4.4', '< 4.9'

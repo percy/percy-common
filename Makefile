@@ -1,6 +1,6 @@
 # setup default base image (digest-pinned so the default build cannot be
 # silently swapped via a mutable tag)
-BASE_IMAGE ?= ruby:2.6-alpine@sha256:382ce92de42ef027bf1bfe382c3f3c3878042c41c07da8b8aa41855db0894762
+BASE_IMAGE ?= ruby:3.3-alpine@sha256:940f1f8ba78c93b303eb2a632b249792cf60435517da260f3a1b9c8b8f1e7dfe
 
 build:
 	docker-compose build --build-arg BASE_IMAGE="$(BASE_IMAGE)"

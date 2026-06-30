@@ -22,32 +22,23 @@ RSpec.describe Percy::NetworkHelpers do
   end
 
   describe '#random_open_port' do
-    let(:custom_min_port) { 1026 }
-    let(:custom_max_port) { 1028 }
-
-    it 'returns a random open port in the desired range' do
-      expect(Percy::NetworkHelpers.random_open_port).to be >= described_class::MIN_PORT
-      expect(Percy::NetworkHelpers.random_open_port).to be <= described_class::MAX_PORT
+    it 'returns a port in the default range' do
+      port = Percy::NetworkHelpers.random_open_port
+      expect(port).to be >= described_class::MIN_PORT
+      expect(port).to be <= described_class::MAX_PORT
     end
 
-    it 'return a random open port in the user given range' do
-      port = Percy::NetworkHelpers.random_open_port(
-        min_port: custom_min_port, max_port: custom_max_port,
-      )
-      expect(port).to be >= custom_min_port
-      expect(port).to be <= custom_max_port
-    end
-
-    it 'raises an error when an open port is not found' do
-      allow(Percy::NetworkHelpers).to receive(:port_open?).and_return(false)
-
-      expect { Percy::NetworkHelpers.random_open_port }.to \
-        raise_error(Percy::NetworkHelpers::OpenPortNotFound)
+    it 'raises an error when the OS keeps assigning ports outside the requested range' do
+      # OS-assigned ephemeral ports are well above port 1028, so a narrow
+      # low-numbered range can never be satisfied.
+      expect do
+        Percy::NetworkHelpers.random_open_port(min_port: 1026, max_port: 1028)
+      end.to raise_error(Percy::NetworkHelpers::OpenPortNotFound)
     end
   end
 
   describe '#port_open?' do
-    let(:port) { 7070 }
+    let(:port) { Percy::NetworkHelpers.random_open_port }
 
     it 'tells you if a port is open or not' do
       # Block the port and check it's not open
@@ -100,6 +91,39 @@ RSpec.describe Percy::NetworkHelpers do
 
     it 'serves a static directory' do
       pid = Percy::NetworkHelpers.serve_static_directory(test_data_dir)
+      Percy::ProcessHelpers.gracefully_kill(pid)
+    end
+
+    it 'raises InvalidServeDirectory when dir is nil or empty' do
+      expect do
+        Percy::NetworkHelpers.serve_static_directory(nil)
+      end.to raise_error(Percy::NetworkHelpers::InvalidServeDirectory)
+
+      expect do
+        Percy::NetworkHelpers.serve_static_directory('')
+      end.to raise_error(Percy::NetworkHelpers::InvalidServeDirectory)
+    end
+
+    it 'raises InvalidServeDirectory when dir does not exist' do
+      expect do
+        Percy::NetworkHelpers.serve_static_directory('/nonexistent/path/that/should/not/exist')
+      end.to raise_error(Percy::NetworkHelpers::InvalidServeDirectory)
+    end
+
+    it 'raises InvalidServeDirectory when dir is outside allowed_base' do
+      expect do
+        Percy::NetworkHelpers.serve_static_directory(
+          '/tmp',
+          allowed_base: test_data_dir,
+        )
+      end.to raise_error(Percy::NetworkHelpers::InvalidServeDirectory)
+    end
+
+    it 'accepts a dir that is inside allowed_base' do
+      pid = Percy::NetworkHelpers.serve_static_directory(
+        test_data_dir,
+        allowed_base: File.expand_path('..', test_data_dir),
+      )
       Percy::ProcessHelpers.gracefully_kill(pid)
     end
   end

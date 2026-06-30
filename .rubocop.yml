@@ -14,6 +14,9 @@ RSpec/DescribeClass:
 
 # TODO: disable new cops
 AllCops:
-  TargetRubyVersion: 2.6
+  # NOTE: pinned to 3.0 because the bundled rubocop (0.93.1 via percy-style)
+  # does not understand newer values. The gemspec still requires Ruby >= 3.1
+  # at runtime; bump this once percy-style/rubocop are upgraded.
+  TargetRubyVersion: 3.0
   Exclude:
     - spec/support/redis_mock.rb
