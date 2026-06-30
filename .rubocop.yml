@@ -20,3 +20,7 @@ AllCops:
   TargetRubyVersion: 3.0
   Exclude:
     - spec/support/redis_mock.rb
+    # rubocop 0.93.1 + parser 3.3 crashes inside Layout/BlockAlignment when
+    # inspecting the Guardfile under Ruby 3.2+. Drop this exclusion once
+    # percy-style/rubocop are upgraded.
+    - Guardfile
