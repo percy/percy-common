@@ -10,20 +10,14 @@ steps:
     command:
       - make lint
 
-  - label: ':rspec: Test Ruby 2.6'
+  - label: ':rspec: Test Ruby 3.2'
     env:
-      BASE_IMAGE: 'ruby:2.6-alpine'
+      BASE_IMAGE: 'ruby:3.2-alpine@sha256:d206c25708a44df6a7ce22213ee5da9fc0a9f7b31ce884429ba758db48abdc62'
     agents: *agents
     command: *command
 
-  - label: ':rspec: Test Ruby 2.7'
+  - label: ':rspec: Test Ruby 3.3'
     env:
-      BASE_IMAGE: 'ruby:2.7-alpine'
-    agents: *agents
-    command: *command
-
-  - label: ':rspec: Test Ruby 3.0'
-    env:
-      BASE_IMAGE: 'ruby:3.0-alpine'
+      BASE_IMAGE: 'ruby:3.3-alpine@sha256:940f1f8ba78c93b303eb2a632b249792cf60435517da260f3a1b9c8b8f1e7dfe'
     agents: *agents
     command: *command
