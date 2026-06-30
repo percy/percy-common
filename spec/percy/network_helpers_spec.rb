@@ -38,7 +38,7 @@ RSpec.describe Percy::NetworkHelpers do
   end
 
   describe '#port_open?' do
-    let(:port) { Percy::NetworkHelpers.random_open_port }
+    let(:port) { 7070 }
 
     it 'tells you if a port is open or not' do
       # Block the port and check it's not open
@@ -125,6 +125,23 @@ RSpec.describe Percy::NetworkHelpers do
         allowed_base: File.expand_path('..', test_data_dir),
       )
       Percy::ProcessHelpers.gracefully_kill(pid)
+    end
+
+    it 'raises ServerDown when the child never emits a bound-port banner' do
+      process = IO.popen(['sh', '-c', 'echo this is not the banner'])
+      pid = process.pid
+      begin
+        expect do
+          Percy::NetworkHelpers.send(:read_bound_port, process, timeout_seconds: 0.5)
+        end.to raise_error(Percy::NetworkHelpers::ServerDown, /Could not determine bound port/)
+      ensure
+        process.close unless process.closed?
+        begin
+          Process.waitpid(pid)
+        rescue Errno::ECHILD
+          # Already reaped by IO#close.
+        end
+      end
     end
   end
 end
