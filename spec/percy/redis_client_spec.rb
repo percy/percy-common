@@ -108,6 +108,36 @@ RSpec.describe Percy::RedisClient do
         File.expand_path('../support/ssl', __dir__)
       end
     end
+
+    context 'without REDIS_SSL_PRIVATE_KEY_PATH or an explicit key' do
+      let(:options) { {url: 'rediss://127.0.0.1:6379'} }
+      let(:cert_path) { File.expand_path('../support/ssl', __dir__) }
+
+      it 'raises InvalidConfiguration instead of silently falling back to an env key' do
+        env_keys = %w[
+          REDIS_SSL_PRIVATE_KEY REDIS_SSL_PRIVATE_KEY_PATH
+          REDIS_SSL_CERTIFICATE_AUTHORITY_PATH
+          REDIS_SSL_CLIENT_CERTIFICATE REDIS_SSL_CLIENT_CERTIFICATE_PATH
+        ]
+        original = env_keys.each_with_object({}) { |k, h| h[k] = ENV[k] }
+        env_keys.each { |k| ENV.delete(k) }
+
+        # Provide CA + client cert paths so the request reaches the key
+        # branch; the only thing we want to test is that setting the
+        # removed REDIS_SSL_PRIVATE_KEY env var does NOT satisfy the
+        # private-key requirement.
+        ENV['REDIS_SSL_CERTIFICATE_AUTHORITY_PATH'] = File.join(cert_path, 'trusted-ca.crt')
+        ENV['REDIS_SSL_CLIENT_CERTIFICATE_PATH'] = File.join(cert_path, 'trusted-cert.crt')
+        ENV['REDIS_SSL_PRIVATE_KEY'] = 'placeholder-this-must-not-be-honoured'
+
+        expect { Percy::RedisClient.new(options) }.to raise_error(
+          Percy::RedisClient::InvalidConfiguration,
+          /REDIS_SSL_PRIVATE_KEY_PATH is not defined/,
+        )
+      ensure
+        env_keys.each { |k| ENV[k] = original[k] }
+      end
+    end
   end
 
   context 'with explicit SSL redis parameters' do
