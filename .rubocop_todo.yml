@@ -10,3 +10,11 @@
 RSpec/LeakyConstantDeclaration:
   Exclude:
     - 'spec/percy/keyword_struct_spec.rb'
+
+# Mismatch between gemspec required_ruby_version (>= 3.1) and rubocop
+# TargetRubyVersion (3.0). The bundled rubocop (0.93.1 via percy-style) does
+# not understand 3.1 as a TargetRubyVersion. Remove this exclusion after
+# percy-style/rubocop are upgraded.
+Gemspec/RequiredRubyVersion:
+  Exclude:
+    - 'percy-common.gemspec'

@@ -9,11 +9,24 @@ module Percy
 
     class ServerDown < RuntimeError; end
     class OpenPortNotFound < RuntimeError; end
+    class InvalidServeDirectory < ArgumentError; end
 
+    # Returns a port number that was bound and immediately released by the OS.
+    # Uses kernel-assigned ephemeral ports so the returned value is known-free
+    # at the moment of the call. The min_port/max_port arguments are honoured
+    # by retrying assignments that fall outside the requested range.
+    #
+    # Note: there is an inherent TOCTOU race between this method returning and
+    # any caller binding the returned port. For race-free use, prefer
+    # serve_static_directory with port: nil (which uses OS-assigned ports
+    # directly in the child process) or bind via TCPServer.new(host, 0) and
+    # keep the socket open.
     def self.random_open_port(min_port: MIN_PORT, max_port: MAX_PORT)
       MAX_PORT_ATTEMPTS.times do
-        port = rand(min_port..max_port)
-        return port if port_open? port
+        server = TCPServer.new('127.0.0.1', 0)
+        port = server.addr[1]
+        server.close
+        return port if port.between?(min_port, max_port)
       end
 
       raise OpenPortNotFound
@@ -55,17 +68,75 @@ module Percy
       raise ServerDown, "Server is down: #{hostname}"
     end
 
-    def self.serve_static_directory(dir, hostname: 'localhost', port: nil)
-      port ||= random_open_port
+    # Starts a simple HTTP server that serves `dir`. The directory is resolved
+    # to an absolute path with File.realpath; if `allowed_base` is given, the
+    # resolved directory must live under it or InvalidServeDirectory is raised.
+    #
+    # When `port` is nil, the child process is started with -p 0 and the
+    # OS-assigned port is read back from its output, eliminating the
+    # probe-and-release TOCTOU race between port selection and bind.
+    def self.serve_static_directory(dir, hostname: 'localhost', port: nil, allowed_base: nil)
+      resolved_dir = validate_serve_directory!(dir, allowed_base: allowed_base)
 
-      # Note: using this form of popen to keep stdout and stderr silent and captured.
+      child_port = port.nil? ? 0 : port.to_i
       process = IO.popen(
         [
-          'ruby', '-run', '-e', 'httpd', dir, '-p', port.to_s, err: [:child, :out],
+          'ruby', '-run', '-e', 'httpd', resolved_dir, '-p', child_port.to_s,
+          err: [:child, :out],
         ].flatten,
       )
-      verify_http_server_up(hostname, port: port)
+
+      bound_port = port.nil? ? read_bound_port(process) : port
+      verify_http_server_up(hostname, port: bound_port)
       process.pid
+    end
+
+    private_class_method def self.validate_serve_directory!(dir, allowed_base:)
+      raise InvalidServeDirectory, 'dir must be provided' if dir.nil? || dir.to_s.empty?
+
+      begin
+        resolved = File.realpath(dir.to_s)
+      rescue Errno::ENOENT, Errno::ENOTDIR
+        raise InvalidServeDirectory, "dir does not resolve to an existing directory: #{dir}"
+      end
+
+      unless File.directory?(resolved)
+        raise InvalidServeDirectory, "dir is not a directory: #{dir}"
+      end
+
+      if allowed_base
+        base = File.realpath(allowed_base.to_s)
+        unless resolved == base || resolved.start_with?(base + File::SEPARATOR)
+          raise InvalidServeDirectory,
+            "dir #{resolved} is outside allowed_base #{base}"
+        end
+      end
+
+      resolved
+    end
+
+    private_class_method def self.read_bound_port(process, timeout_seconds: 10)
+      deadline = Time.now + timeout_seconds
+      buffer = +''
+      while Time.now < deadline
+        ready = IO.select([process], nil, nil, deadline - Time.now)
+        break unless ready
+
+        begin
+          chunk = process.read_nonblock(4096)
+        rescue IO::WaitReadable
+          next
+        rescue EOFError
+          break
+        end
+
+        buffer << chunk
+        if (match = buffer.match(/port=(\d+)/))
+          return match[1].to_i
+        end
+      end
+
+      raise ServerDown, "Could not determine bound port from child process output: #{buffer}"
     end
   end
 end
