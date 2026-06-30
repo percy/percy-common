@@ -79,14 +79,21 @@ module Percy
       resolved_dir = validate_serve_directory!(dir, allowed_base: allowed_base)
 
       child_port = port.nil? ? 0 : port.to_i
+      # '--' guards against a `resolved_dir` that begins with '-' being
+      # interpreted as a flag by un.rb#httpd's OptionParser.
       process = IO.popen(
         [
-          'ruby', '-run', '-e', 'httpd', resolved_dir, '-p', child_port.to_s,
+          'ruby', '-run', '-e', 'httpd', '--', resolved_dir, '-p', child_port.to_s,
           err: [:child, :out],
         ].flatten,
       )
 
       bound_port = port.nil? ? read_bound_port(process) : port
+      # Drain the child's stdout in the background. WEBrick logs every
+      # request to stderr (redirected here onto stdout). Without a reader,
+      # the OS pipe buffer (~64KB) fills and WEBrick blocks inside Logger,
+      # stalling request handling.
+      drain_io_in_background(process)
       verify_http_server_up(hostname, port: bound_port)
       process.pid
     end
@@ -115,11 +122,21 @@ module Percy
       resolved
     end
 
+    # Matches the WEBrick startup banner, e.g.:
+    #   [2026-06-30 09:30:05] INFO  WEBrick::HTTPServer#start: pid=70189 port=58046
+    # Anchoring to `pid=N port=N` avoids latching onto a literal `port=N`
+    # substring that could appear elsewhere in the child's output (for
+    # example, in an echoed DocumentRoot path).
+    BOUND_PORT_PATTERN = /pid=\d+\s+port=(\d+)/.freeze
+
     private_class_method def self.read_bound_port(process, timeout_seconds: 10)
       deadline = Time.now + timeout_seconds
       buffer = +''
-      while Time.now < deadline
-        ready = IO.select([process], nil, nil, deadline - Time.now)
+      loop do
+        remaining = deadline - Time.now
+        break if remaining <= 0
+
+        ready = IO.select([process], nil, nil, remaining)
         break unless ready
 
         begin
@@ -131,12 +148,22 @@ module Percy
         end
 
         buffer << chunk
-        if (match = buffer.match(/port=(\d+)/))
+        if (match = buffer.match(BOUND_PORT_PATTERN))
           return match[1].to_i
         end
       end
 
       raise ServerDown, "Could not determine bound port from child process output: #{buffer}"
+    end
+
+    private_class_method def self.drain_io_in_background(io)
+      Thread.new do
+        begin
+          io.read until io.closed?
+        rescue IOError, Errno::EBADF
+          # Stream closed -- nothing more to drain.
+        end
+      end
     end
   end
 end
