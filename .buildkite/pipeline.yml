@@ -1,29 +1,30 @@
-agents: &agents
-  os: 'linux_small'
-
-command: &command
-  - make test
-
+# Bootstrap pipeline (uploaded by Buildkite for every build in this repo).
+#
+# It decides whether to run the full CI pipeline, which now lives in
+# .buildkite/pipeline.steps.yml:
+#
+#   * Any non-PR build (branch / merge / tag, incl. master and deploy branches)
+#     -> ALWAYS run the full pipeline. Deploys are never gated on docs detection.
+#   * pull_request builds that change ONLY documentation (*.md, *.txt, README*,
+#     LICENSE, docs/**)  -> upload nothing, so the build passes with just this
+#     step and no compute is spent.
+#   * everything else (any non-docs file changed, or the diff can't be computed)
+#     -> run the full pipeline (fail-safe).
 steps:
-  - label: ':rubocop: Lint'
-    agents: *agents
-    command:
-      - make lint
-
-  - label: ':rspec: Test Ruby 2.6'
-    env:
-      BASE_IMAGE: 'ruby:2.6-alpine'
-    agents: *agents
-    command: *command
-
-  - label: ':rspec: Test Ruby 2.7'
-    env:
-      BASE_IMAGE: 'ruby:2.7-alpine'
-    agents: *agents
-    command: *command
-
-  - label: ':rspec: Test Ruby 3.0'
-    env:
-      BASE_IMAGE: 'ruby:3.0-alpine'
-    agents: *agents
-    command: *command
+  - label: ":mag: Resolve CI scope (docs-only skip)"
+    key: "bootstrap"
+    agents:
+      os: "linux_super_small"
+    command: "bash .buildkite/scripts/upload-pipeline.sh"
+    timeout_in_minutes: 5
+    # Mirror the retry policy used by the full pipeline so a lost agent (-1) /
+    # Docker daemon error (125) / preemptible-VM shutdown (255) re-runs the
+    # bootstrap instead of failing the whole build.
+    retry:
+      automatic:
+        - exit_status: -1  # Agent was lost
+          limit: 2
+        - exit_status: 125 # Error response from Docker daemon
+          limit: 2
+        - exit_status: 255 # Forced agent shutdown often due to preemptible VMs
+          limit: 2
