@@ -56,16 +56,11 @@ module Percy
 
     private def private_key
       provided_private_key ||
-        private_key_from_env ||
         private_key_from_path
     end
 
     private def provided_private_key
       @provided_options&.dig(:ssl_params, :key)
-    end
-
-    private def private_key_from_env
-      ENV['REDIS_SSL_PRIVATE_KEY']
     end
 
     private def private_key_from_path
