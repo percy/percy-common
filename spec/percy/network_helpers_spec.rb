@@ -110,7 +110,7 @@ RSpec.describe Percy::NetworkHelpers do
     it 'stops draining once the child exits' do
       io = IO.popen(['sh', '-c', 'echo hi'])
       thread = Percy::NetworkHelpers.send(:drain_io_in_background, io)
-      expect(thread.join(5)).not_to be_nil
+      expect(thread.join(5)).to_not be_nil
       io.close
     end
 
