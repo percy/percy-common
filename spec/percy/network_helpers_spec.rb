@@ -94,6 +94,26 @@ RSpec.describe Percy::NetworkHelpers do
       Percy::ProcessHelpers.gracefully_kill(pid)
     end
 
+    it 'kills the spawned server when startup verification fails' do
+      allow(Percy::NetworkHelpers).to receive(:verify_http_server_up)
+        .and_raise(Percy::NetworkHelpers::ServerDown)
+      pid = nil
+      allow(IO).to receive(:popen).and_wrap_original do |m, *args|
+        m.call(*args).tap { |io| pid = io.pid }
+      end
+
+      expect { Percy::NetworkHelpers.serve_static_directory(test_data_dir) }
+        .to raise_error(Percy::NetworkHelpers::ServerDown)
+      expect { Process.kill(0, pid) }.to raise_error(Errno::ESRCH)
+    end
+
+    it 'stops draining once the child exits' do
+      io = IO.popen(['sh', '-c', 'echo hi'])
+      thread = Percy::NetworkHelpers.send(:drain_io_in_background, io)
+      expect(thread.join(5)).not_to be_nil
+      io.close
+    end
+
     it 'raises InvalidServeDirectory when dir is nil or empty' do
       expect do
         Percy::NetworkHelpers.serve_static_directory(nil)

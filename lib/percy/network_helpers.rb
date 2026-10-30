@@ -88,14 +88,30 @@ module Percy
         ].flatten,
       )
 
-      bound_port = port.nil? ? read_bound_port(process) : port
-      # Drain the child's stdout in the background. WEBrick logs every
-      # request to stderr (redirected here onto stdout). Without a reader,
-      # the OS pipe buffer (~64KB) fills and WEBrick blocks inside Logger,
-      # stalling request handling.
-      drain_io_in_background(process)
-      verify_http_server_up(hostname, port: bound_port)
-      process.pid
+      started = false
+      begin
+        bound_port = port.nil? ? read_bound_port(process) : port
+        # Drain the child's stdout in the background. WEBrick logs every
+        # request to stderr (redirected here onto stdout). Without a reader,
+        # the OS pipe buffer (~64KB) fills and WEBrick blocks inside Logger,
+        # stalling request handling.
+        drain_io_in_background(process)
+        verify_http_server_up(hostname, port: bound_port)
+        started = true
+        process.pid
+      ensure
+        reap_failed_server(process) unless started
+      end
+    end
+
+    # Don't leave an orphaned server holding its port when startup fails.
+    private_class_method def self.reap_failed_server(process)
+      Process.kill('TERM', process.pid)
+      Process.wait(process.pid)
+    rescue Errno::ESRCH, Errno::ECHILD
+      nil
+    ensure
+      process.close unless process.closed?
     end
 
     private_class_method def self.validate_serve_directory!(dir, allowed_base:)
@@ -159,7 +175,8 @@ module Percy
     private_class_method def self.drain_io_in_background(io)
       Thread.new do
         begin
-          io.read until io.closed?
+          # io.read(n) returns nil at EOF; a bare read would spin on "" forever.
+          nil while io.read(4096)
         rescue IOError, Errno::EBADF
           # Stream closed -- nothing more to drain.
         end
